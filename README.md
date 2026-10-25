@@ -22,7 +22,8 @@ Dopo l'installazione Matita compare anche nel menu **Condividi** di Android.
 
 ## 3. Prima di usarla
 
-- Tieni premuto **Adulti** in alto a destra > **Chi disegna**: Mamma e Zia sono già create, manca solo la foto. Aggiungi le altre persone con nome e foto.
+- Al primo avvio Matita chiede il nome dell'**adulto supervisore** e di **chi disegna**. I nomi restano solo sul tablet, non nel codice.
+- Poi tieni premuto **Adulti** in alto a destra > **Chi disegna** e aggiungi le foto.
 - **Disegni**: togli i tre esempi (zucca, pesce, casa) se non servono e aggiungi i disegni preferiti.
 - **Copia di sicurezza**: salvane una quando hai finito. Disegni e foto vivono solo nel tablet.
 

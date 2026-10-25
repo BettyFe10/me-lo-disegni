@@ -209,6 +209,15 @@ details.tune summary { min-height: 48px; display: flex; align-items: center; fon
 .steplabel { font-size: .8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-top: 6px; }
 .textin { width: 100%; min-height: 56px; padding: 8px 14px; border: 2px solid var(--line); border-radius: 12px; background: #fff; font-weight: 700; font-size: 1.2rem; }
 @media (max-width: 560px) { .newperson { grid-template-columns: 1fr; justify-items: center; } .npform { width: 100%; } }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { display: inline-flex; align-items: center; gap: 4px; min-height: 48px; padding: 4px 6px 4px 16px; border-radius: 999px; background: var(--paper); border: 2px solid var(--line); font-weight: 700; font-size: 1.1rem; }
+.chip button { width: 40px; height: 40px; border-radius: 50%; border: 0; background: transparent; display: grid; place-items: center; color: var(--muted); }
+.chip button svg { width: 18px; height: 18px; }
+.chip.lead { background: #DCE5FA; border-color: #BFCDF2; padding-right: 16px; }
+.addrow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; }
+.setup > .btn.big { width: 100%; max-width: 760px; }
+.setup .box { max-width: 760px; margin-bottom: 14px; }
+.linkish { color: var(--accent); font-weight: 700; text-decoration: underline; cursor: pointer; position: relative; }
 .tip { border-left: 4px solid var(--sun); padding: 8px 0 8px 14px; color: var(--ink); }
 .tip strong { font-weight: 700; }
 @media (max-width: 560px) {
@@ -289,7 +298,7 @@ details.tune summary { min-height: 48px; display: flex; align-items: center; fon
     <div class="grid" id="grid"></div>
     <div class="empty" id="empty" hidden>
       <strong id="emptyWord"></strong>
-      Non c'è ancora. Chiedi a un adulto di aggiungerlo.
+      Non c'è ancora. Chiedi a <b id="askWho">un adulto</b> di aggiungerlo.
     </div>
   </section>
 
@@ -354,6 +363,31 @@ details.tune summary { min-height: 48px; display: flex; align-items: center; fon
         </details>
       </div>
     </div>
+  </section>
+
+  <!-- PRIMO AVVIO -->
+  <section id="setup" hidden class="admin setup">
+    <h2>Prima di iniziare</h2>
+    <p class="lead">Due domande e Matita è pronta. Potrai cambiare tutto più avanti dall'area Adulti.</p>
+    <div class="box">
+      <h3>1. Chi è l'adulto supervisore?</h3>
+      <p>È la persona che aggiunge i disegni. Quando chi usa Matita cerca un disegno che non c'è, gli verrà detto di chiedere a questa persona.</p>
+      <label class="field" for="suName"><span>Nome del supervisore</span></label>
+      <input type="text" id="suName" class="textin" placeholder="Per esempio: Anna" autocomplete="off">
+    </div>
+    <div class="box">
+      <h3>2. Chi disegna?</h3>
+      <p>Le persone tra cui si potrà scegliere. Il supervisore c'è già. Le foto si mettono dopo, dall'area Adulti.</p>
+      <div class="chips" id="suChips"></div>
+      <div class="addrow">
+        <input type="text" id="suPerson" class="textin" placeholder="Per esempio: Mamma" autocomplete="off" enterkeyhint="done" aria-label="Nome di chi disegna">
+        <button class="btn" id="suAdd" type="button">Aggiungi</button>
+      </div>
+    </div>
+    <button class="btn big primary" id="suDone" type="button">Inizia</button>
+    <p class="note">Hai una copia di sicurezza da un altro tablet?
+      <label class="linkish filebtn">Ripristinala<input type="file" id="suImport" accept=".json,application/json"></label>
+    </p>
   </section>
 
   <!-- GUIDA -->
@@ -453,6 +487,11 @@ details.tune summary { min-height: 48px; display: flex; align-items: center; fon
     </div>
 
     <div class="panel" id="tPeople" hidden>
+      <div class="box">
+        <h3>Adulto supervisore</h3>
+        <p>Quando un disegno non c'è, Matita dice di chiedere a questa persona.</p>
+        <input type="text" id="supName" class="textin" placeholder="Nome" autocomplete="off" aria-label="Nome del supervisore">
+      </div>
       <div class="box">
         <h3>Aggiungi una persona</h3>
         <p>Per esempio un familiare o l'operatore. La sua faccia comparirà vicino alla matita mentre disegna.</p>
@@ -643,8 +682,6 @@ const SAMPLES = [
   { nomi: 'pesce', svg: '<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><rect width="600" height="600" fill="#fff"/><g stroke="#111" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"><path d="M430 300 L565 195 L540 300 L565 405 Z" fill="#3E7BD6"/><path d="M230 185 C270 110 345 110 370 185 Z" fill="#3E7BD6"/><ellipse cx="270" cy="300" rx="200" ry="130" fill="#58A6F0"/><path d="M250 320 C275 385 335 385 345 335 Z" fill="#3E7BD6"/><circle cx="150" cy="268" r="26" fill="#fff"/><circle cx="145" cy="268" r="11" fill="#111"/><path d="M84 330 C108 346 130 346 150 336" fill="none"/></g></svg>' },
   { nomi: 'casa', svg: '<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><rect width="600" height="600" fill="#fff"/><g stroke="#111" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"><rect x="390" y="140" width="46" height="90" fill="#B4413A"/><rect x="130" y="270" width="340" height="260" fill="#F6D04D"/><path d="M100 285 L300 110 L500 285 Z" fill="#D9473B"/><rect x="258" y="392" width="88" height="138" fill="#8B5A2B"/><circle cx="330" cy="465" r="7" fill="#111"/><rect x="165" y="320" width="70" height="70" fill="#9FD3F5"/><path d="M200 320 V390 M165 355 H235" fill="none"/><rect x="368" y="320" width="70" height="70" fill="#9FD3F5"/><path d="M403 320 V390 M368 355 H438" fill="none"/></g></svg>' }
 ];
-const SEED_PEOPLE = ['Mamma', 'Zia'];
-
 async function seedIfNeeded() {
   if (await getMeta('seeded')) return;
   for (const s of SAMPLES) {
@@ -653,21 +690,19 @@ async function seedIfNeeded() {
     rec.esempio = true;
     await put('immagini', rec);
   }
-  for (let i = 0; i < SEED_PEOPLE.length; i++) {
-    await put('persone', { nome: SEED_PEOPLE[i], foto: null, colore: i, ordine: i });
-  }
   await setMeta('seeded', true);
 }
 
 /* ================= Stato ================= */
-const state = { images: [], people: [], img: null, person: null, screen: 'home' };
+const state = { images: [], people: [], img: null, person: null, screen: 'home', supervisore: '' };
 async function reload() {
   state.images = await all('immagini');
   state.people = (await all('persone')).sort((a, b) => (a.ordine ?? a.id) - (b.ordine ?? b.id));
+  state.supervisore = (await getMeta('supervisore')) || '';
 }
 
 /* ================= Navigazione (tasto Indietro di Android incluso) ================= */
-const SCREENS = ['home', 'who', 'draw', 'admin', 'inbox', 'guide'];
+const SCREENS = ['home', 'who', 'draw', 'admin', 'inbox', 'guide', 'setup'];
 function show(name) {
   state.screen = name;
   for (const s of SCREENS) $('#' + s).hidden = s !== name;
@@ -730,6 +765,7 @@ function renderGrid() {
   }
   $('#empty').hidden = res.length > 0;
   $('#emptyWord').textContent = q.trim();
+  $('#askWho').textContent = state.supervisore || 'un adulto';
   $('#hint').hidden = res.length === 0;
   $('#hint').textContent = q.trim() ? 'Tocca il disegno che vuoi.' : (state.images.length ? 'Scrivi una parola, oppure tocca un disegno.' : '');
 }
@@ -1161,6 +1197,7 @@ function armDelete(btn, onConfirm) {
 }
 
 function renderAdmin() {
+  $('#supName').value = state.supervisore || '';
   // disegni
   const rows = $('#imgRows');
   rows.innerHTML = '';
@@ -1220,6 +1257,12 @@ $('#personPhoto').addEventListener('change', async e => {
   await put('persone', photoTarget);
   await reload(); renderAdmin(); toast('Foto salvata');
 });
+$('#supName').addEventListener('change', async () => {
+  state.supervisore = $('#supName').value.trim();
+  await setMeta('supervisore', state.supervisore);
+  toast('Salvato');
+});
+
 /* ----- nuova persona (familiare, operatore...) ----- */
 let npPhoto = null;
 function resetNewPerson() {
@@ -1317,7 +1360,7 @@ const blobToData = b => new Promise((res, rej) => { if (!b) return res(null); co
 const dataToBlob = async d => (d ? (await fetch(d)).blob() : null);
 
 $('#exportBtn').addEventListener('click', async () => {
-  const out = { app: 'matita', versione: 1, data: new Date().toISOString(), immagini: [], persone: [] };
+  const out = { app: 'matita', versione: 1, data: new Date().toISOString(), supervisore: state.supervisore || '', immagini: [], persone: [] };
   for (const r of state.images) out.immagini.push({ nomi: r.nomi, usi: r.usi || 0, linee: r.linee || 2, esempio: !!r.esempio, creato: r.creato, blob: await blobToData(r.blob), thumb: await blobToData(r.thumb) });
   for (const p of state.people) out.persone.push({ nome: p.nome, colore: p.colore, ordine: p.ordine, foto: await blobToData(p.foto) });
   const blob = new Blob([JSON.stringify(out)], { type: 'application/json' });
@@ -1327,10 +1370,7 @@ $('#exportBtn').addEventListener('click', async () => {
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 4000);
 });
-$('#importFile').addEventListener('change', async e => {
-  const f = e.target.files[0];
-  e.target.value = '';
-  if (!f) return;
+async function importBackup(f) {
   try {
     const data = JSON.parse(await f.text());
     if (data.app !== 'matita') throw new Error('formato');
@@ -1338,11 +1378,83 @@ $('#importFile').addEventListener('change', async e => {
     for (const r of data.immagini || []) await put('immagini', { nomi: r.nomi, usi: r.usi, linee: r.linee, esempio: r.esempio, creato: r.creato, blob: await dataToBlob(r.blob), thumb: await dataToBlob(r.thumb) });
     for (const p of data.persone || []) await put('persone', { nome: p.nome, colore: p.colore, ordine: p.ordine, foto: await dataToBlob(p.foto) });
     await setMeta('seeded', true);
+    await setMeta('setupDone', true);
+    if (typeof data.supervisore === 'string') await setMeta('supervisore', data.supervisore);
     lineCache.clear();
-    await reload(); renderAdmin();
+    await reload();
     toast('Copia ripristinata');
+    return true;
   } catch (err) {
     toast('Questo file non è una copia di Matita');
+    return false;
+  }
+}
+$('#importFile').addEventListener('change', async e => {
+  const f = e.target.files[0];
+  e.target.value = '';
+  if (f && await importBackup(f)) renderAdmin();
+});
+
+/* ----- primo avvio ----- */
+const suPeople = [];
+const X_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+function renderSetupChips() {
+  const box = $('#suChips');
+  box.innerHTML = '';
+  const sup = $('#suName').value.trim();
+  if (sup) {
+    const c = document.createElement('span');
+    c.className = 'chip lead';
+    c.textContent = sup;
+    box.appendChild(c);
+  }
+  suPeople.forEach((n, i) => {
+    const c = document.createElement('span');
+    c.className = 'chip';
+    c.append(n);
+    const x = document.createElement('button');
+    x.type = 'button';
+    x.setAttribute('aria-label', 'Togli ' + n);
+    x.innerHTML = X_ICON;
+    x.addEventListener('click', () => { suPeople.splice(i, 1); renderSetupChips(); });
+    c.appendChild(x);
+    box.appendChild(c);
+  });
+}
+function addSetupPerson() {
+  const inp = $('#suPerson');
+  const n = inp.value.trim();
+  if (!n) { inp.focus(); return; }
+  const sup = norm($('#suName').value);
+  if (norm(n) !== sup && !suPeople.some(p => norm(p) === norm(n))) suPeople.push(n);
+  inp.value = '';
+  renderSetupChips();
+  inp.focus();
+}
+$('#suName').addEventListener('input', renderSetupChips);
+$('#suAdd').addEventListener('click', addSetupPerson);
+$('#suPerson').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addSetupPerson(); } });
+$('#suDone').addEventListener('click', async () => {
+  const sup = $('#suName').value.trim();
+  if (!sup) { toast('Scrivi il nome del supervisore'); $('#suName').focus(); return; }
+  if ($('#suPerson').value.trim()) addSetupPerson();
+  const list = [sup, ...suPeople];
+  for (let i = 0; i < list.length; i++) await put('persone', { nome: list[i], foto: null, colore: i, ordine: i });
+  await setMeta('supervisore', sup);
+  await setMeta('setupDone', true);
+  await reload();
+  history.replaceState({ screen: 'home' }, '');
+  show('home');
+  renderGrid();
+  toast('Pronta! Le foto si mettono dall\'area Adulti');
+});
+$('#suImport').addEventListener('change', async e => {
+  const f = e.target.files[0];
+  e.target.value = '';
+  if (f && await importBackup(f)) {
+    history.replaceState({ screen: 'home' }, '');
+    show('home');
+    renderGrid();
   }
 });
 
@@ -1354,11 +1466,19 @@ $('#importFile').addEventListener('change', async e => {
   } catch (e) {
     toast('Questo browser non può salvare i disegni');
   }
-  history.replaceState({ screen: 'home' }, '');
-  show('home');
-  renderGrid();
-  await checkInbox();
-  if (location.hash === '#adulti') openAdmin();
+  let setupDone = true;
+  try { setupDone = !!(await getMeta('setupDone')); } catch (e) {}
+  if (!setupDone) {
+    history.replaceState({ screen: 'setup' }, '');
+    show('setup');
+    renderSetupChips();
+  } else {
+    history.replaceState({ screen: 'home' }, '');
+    show('home');
+    renderGrid();
+    await checkInbox();
+    if (location.hash === '#adulti') openAdmin();
+  }
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
     navigator.serviceWorker.register('sw.js').catch(() => {});
     navigator.serviceWorker.addEventListener('message', e => { if (e.data === 'inbox') checkInbox(); });

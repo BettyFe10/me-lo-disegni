@@ -135,6 +135,8 @@ main {
   display: grid; place-items: center; padding: 14px; min-height: 260px; position: relative;
 }
 .stage { position: relative; line-height: 0; }
+.printhelp { display: grid; gap: 8px; padding: 12px; border-radius: var(--r-md); background: var(--paper); border: 2px solid var(--line); }
+.printhelp p { margin: 0; color: var(--muted); }
 #cv { display: block; max-width: 100%; max-height: calc(100dvh - 300px); width: auto; height: auto; }
 #pen { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .busy { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--f-display); font-weight: 700; font-size: 1.5rem; color: var(--muted); background: var(--sheet); border-radius: 18px; }
@@ -351,6 +353,10 @@ details.tune summary { min-height: 48px; display: flex; align-items: center; fon
           <button class="btn big" id="again" type="button">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>Di nuovo
           </button>
+        </div>
+        <div class="printhelp" id="printHelp" hidden>
+          <p>La stampa non si apre? Manda il foglio all'app della stampante, a Google Foto o a Drive e stampalo da lì.</p>
+          <button class="btn" id="shareSheet" type="button">Condividi il foglio</button>
         </div>
         <div class="speed" role="group" aria-labelledby="speedLabel">
           <button class="sbtn" id="slower" type="button" aria-label="Più piano">
@@ -594,6 +600,7 @@ details.tune summary { min-height: 48px; display: flex; align-items: center; fon
 <div class="toast" id="toast" role="status" hidden></div>
 
 <script src="lineart.js"></script>
+<script src="soggetto.js"></script>
 <script>
 'use strict';
 const $ = s => document.querySelector(s);
@@ -957,7 +964,7 @@ function releaseWake() { try { if (wakeLock) wakeLock.release(); } catch (e) {} 
 
 async function getLines(rec) {
   const lvl = rec.linee || 2;
-  const key = rec.id + '_' + lvl + '_' + (rec.blob ? rec.blob.size : 0);
+  const key = rec.id + '_' + lvl + '_' + (rec.blob ? rec.blob.size : 0) + '_v2';
   if (lineCache.has(key)) return lineCache.get(key);
   const bmp = await loadBitmap(rec.blob);
   const maxSide = Math.max(bmp.width, bmp.height);
@@ -969,7 +976,14 @@ async function getLines(rec) {
   x.fillStyle = '#fff'; x.fillRect(0, 0, w, h);
   x.drawImage(bmp, 0, 0, w, h);
   if (bmp.close) bmp.close();
-  const res = LineArt.extract(x.getImageData(0, 0, w, h), lvl);
+  const data = x.getImageData(0, 0, w, h);
+  // nelle foto il modello trova l'animale (o la persona, o l'oggetto) e lo separa dallo sfondo
+  let mask = null;
+  if (LineArt.isPhoto(data)) {
+    $('#busy').textContent = 'Guardo bene la foto…';
+    try { mask = await Soggetto.trova(c); } catch (e) { mask = null; }
+  }
+  const res = LineArt.extract(data, lvl, 'auto', mask ? { mask } : {});
   lineCache.set(key, res);
   return res;
 }
@@ -1039,14 +1053,7 @@ function buildPlan(res) {
 
 function runAnimation(res) {
   const { width: w, height: h } = res;
-  const scale = Math.min(2, 1600 / Math.max(w, h));
-  for (const c of [cv, pen]) { c.width = Math.round(w * scale); c.height = Math.round(h * scale); }
-  ctx.setTransform(scale, 0, 0, scale, 0, 0);
-  pctx.setTransform(scale, 0, 0, scale, 0, 0);
-  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h);
-  ctx.strokeStyle = '#15151A';
-  ctx.lineWidth = res.lineWidth;
-  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  setupPage(res);
 
   const { plan, total } = buildPlan(res);
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1062,7 +1069,10 @@ function runAnimation(res) {
 
   function frame(now) {
     if (a.stop) return;
-    const target = a.T ? Math.min(total, ((now - a.t0) / a.T) * total) : total;
+    // a tempo scaduto si arriva comunque in fondo: le lunghezze sono in Float32 e
+    // l'ultimo punto può risultare di un soffio oltre il totale (e il disegno non finiva mai)
+    const p = a.T ? (now - a.t0) / a.T : 1;
+    const target = p >= 1 ? Infinity : p * total;
     let px = null, py = null;
     while (a.si < plan.length) {
       const st = plan[a.si], s = st.s, cum = st.cum, n = cum.length;
@@ -1116,15 +1126,76 @@ function drawBadge(x2, cx, cy, r, num) {
   x2.restore();
 }
 function drawScreenBadges(res) {
-  if (!colorNumsOn() || !res.spots) return;
-  const r = Math.max(res.width, res.height) * 0.032;
+  if (!colorNumsOn() || !res.spots || !state.page) return;
+  const r = state.page.badgeR / state.page.k;
   res.spots.forEach((sp, i) => drawBadge(ctx, sp.x, sp.y, r, i + 1));
 }
+/* ----- il foglio: uguale sullo schermo e sulla carta ----- */
+// misure in millimetri convertite con mmPx (pixel per millimetro)
+function sheetLayout(res, mmPx) {
+  const mm = v => Math.round(v * mmPx);
+  const landscape = res.width / res.height > 1.15;
+  const W = mm(landscape ? 297 : 210), H = mm(landscape ? 210 : 297);
+  const margin = mm(12);
+  const lineY = margin + mm(16);   // spazio sopra la riga per scrivere a mano
+  const gap = mm(14);              // spazio tra le due righe
+  const leftEnd = margin + Math.round((W - margin * 2 - gap) * 0.56);
+  const top = lineY + mm(10);
+  const spots = colorNumsOn() && res.spots ? res.spots : [];
+  const rowH = mm(12);
+  const bandH = spots.length ? spots.length * rowH + mm(6) : 0;
+  const availW = W - margin * 2, availH = H - top - margin - bandH;
+  const k = Math.min(availW / res.width, availH / res.height);
+  return {
+    W, H, landscape, margin, lineY, gap, leftEnd, spots, rowH, bandH, k, mmPx,
+    ox: margin + (availW - res.width * k) / 2, oy: top + (availH - res.height * k) / 2,
+    badgeR: 4.2 * mmPx, lineW: Math.max(2, Math.round(0.6 * mmPx))
+  };
+}
+// fondo bianco, due righe in alto (titolo e nome) e in basso una riga per ogni numero, dove lui scrive il colore
+function drawSheetFrame(x, L) {
+  x.save();
+  x.setTransform(1, 0, 0, 1, 0, 0);
+  x.fillStyle = '#fff'; x.fillRect(0, 0, L.W, L.H);
+  x.strokeStyle = '#000'; x.lineWidth = L.lineW; x.lineCap = 'round';
+  x.beginPath();
+  x.moveTo(L.margin, L.lineY); x.lineTo(L.leftEnd, L.lineY);
+  x.moveTo(L.leftEnd + L.gap, L.lineY); x.lineTo(L.W - L.margin, L.lineY);
+  x.stroke();
+  if (L.spots.length) {
+    const bandTop = L.H - L.margin - L.bandH;
+    const lineLen = Math.min(80 * L.mmPx, (L.W - L.margin * 2) * 0.5);
+    L.spots.forEach((sp, i) => {
+      const ly = bandTop + Math.round(6 * L.mmPx) + (i + 1) * L.rowH - Math.round(2 * L.mmPx);
+      drawBadge(x, L.margin + L.badgeR, ly - L.badgeR * 0.9, L.badgeR, i + 1);
+      x.beginPath();
+      x.moveTo(L.margin + L.badgeR * 2 + 4 * L.mmPx, ly);
+      x.lineTo(L.margin + L.badgeR * 2 + 4 * L.mmPx + lineLen, ly);
+      x.stroke();
+    });
+  }
+  x.restore();
+}
+// prepara le due tele dello schermo come un foglio A4 di circa 1600 pixel
+function setupPage(res) {
+  const probe = sheetLayout(res, 1);
+  const L = sheetLayout(res, 1600 / Math.max(probe.W, probe.H));
+  state.page = L;
+  for (const c of [cv, pen]) { c.width = L.W; c.height = L.H; }
+  drawSheetFrame(ctx, L);
+  ctx.setTransform(L.k, 0, 0, L.k, L.ox, L.oy);
+  pctx.setTransform(L.k, 0, 0, L.k, L.ox, L.oy);
+  ctx.strokeStyle = '#15151A';
+  ctx.lineWidth = res.lineWidth;
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+}
+function clearPen() {
+  pctx.save(); pctx.setTransform(1, 0, 0, 1, 0, 0); pctx.clearRect(0, 0, pen.width, pen.height); pctx.restore();
+}
+
 // ridisegna il foglio intero senza animazione (es. dopo aver cambiato un'opzione)
 function paintAll(res) {
-  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, res.width, res.height);
-  ctx.strokeStyle = '#15151A'; ctx.lineWidth = res.lineWidth;
-  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  setupPage(res);
   for (const s of res.strokes) {
     if (s.length < 4) continue;
     ctx.beginPath(); ctx.moveTo(s[0], s[1]);
@@ -1135,7 +1206,7 @@ function paintAll(res) {
 }
 
 function finish() {
-  pctx.clearRect(0, 0, pen.width, pen.height);
+  clearPen();
   anim = null;
   if (state.lines) drawScreenBadges(state.lines);
   releaseWake();
@@ -1143,10 +1214,11 @@ function finish() {
   $('#drawerText').textContent = p ? 'Disegnato da ' + p.nome : 'Finito!';
   $('#print').disabled = false;
   $('#print').classList.add('pulse');
+  prepareSheet().catch(() => {});
 }
 
 function drawPen(x, y, u, w, h) {
-  pctx.clearRect(0, 0, w, h);
+  clearPen();
   if (x == null) return;
   // matita inclinata, punta sul tratto
   pctx.save();
@@ -1251,7 +1323,7 @@ function syncTune() {
 }
 $('#colorNums').addEventListener('change', e => {
   prefs.set('colorNums', e.target.checked);
-  if (!anim && state.lines) paintAll(state.lines);
+  if (!anim && state.lines) { paintAll(state.lines); prepareSheet().catch(() => {}); }
 });
 $('#lineSeg').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b || !state.img) return;
@@ -1263,53 +1335,13 @@ $('#lineSeg').addEventListener('click', e => {
 /* ================= Stampa ================= */
 async function renderSheet() {
   const res = state.lines;
-  const landscape = res.width / res.height > 1.15;
   // bassa risoluzione apposta: il foglio pesa poco e la stampa parte subito
-  const DPI = 110, mm = DPI / 25.4;
-  const W = Math.round((landscape ? 297 : 210) * mm), H = Math.round((landscape ? 210 : 297) * mm);
-  const margin = Math.round(12 * mm);
+  const L = sheetLayout(res, 110 / 25.4);
   const c = document.createElement('canvas');
-  c.width = W; c.height = H;
+  c.width = L.W; c.height = L.H;
   const x = c.getContext('2d');
-  x.fillStyle = '#fff'; x.fillRect(0, 0, W, H);
-
-  // due righe in alto: a sinistra il titolo, a destra il suo nome (le scrive lui)
-  const lineY = margin + Math.round(16 * mm);   // spazio sopra la riga per scrivere a mano
-  const gap = Math.round(14 * mm);              // spazio tra le due righe
-  const usable = W - margin * 2 - gap;
-  const leftEnd = margin + Math.round(usable * 0.56);
-  x.strokeStyle = '#000';
-  x.lineWidth = Math.max(2, Math.round(0.6 * mm));
-  x.lineCap = 'round';
-  x.beginPath();
-  x.moveTo(margin, lineY); x.lineTo(leftEnd, lineY);
-  x.moveTo(leftEnd + gap, lineY); x.lineTo(W - margin, lineY);
-  x.stroke();
-  const top = lineY + Math.round(10 * mm);
-
-  // in basso a sinistra: una riga per ogni numero, dove lui scrive il colore
-  const spots = colorNumsOn() && res.spots ? res.spots : [];
-  const rowH = Math.round(12 * mm);
-  const bandH = spots.length ? spots.length * rowH + Math.round(6 * mm) : 0;
-  const badgeR = 4.2 * mm;
-  if (spots.length) {
-    const bandTop = H - margin - bandH;
-    const lineLen = Math.min(80 * mm, (W - margin * 2) * 0.5);
-    x.strokeStyle = '#000';
-    x.lineWidth = Math.max(2, Math.round(0.6 * mm));
-    spots.forEach((sp, i) => {
-      const ly = bandTop + Math.round(6 * mm) + (i + 1) * rowH - Math.round(2 * mm);
-      drawBadge(x, margin + badgeR, ly - badgeR * 0.9, badgeR, i + 1);
-      x.beginPath();
-      x.moveTo(margin + badgeR * 2 + 4 * mm, ly);
-      x.lineTo(margin + badgeR * 2 + 4 * mm + lineLen, ly);
-      x.stroke();
-    });
-  }
-
-  const availW = W - margin * 2, availH = H - top - margin - bandH;
-  const k = Math.min(availW / res.width, availH / res.height);
-  const ox = margin + (availW - res.width * k) / 2, oy = top + (availH - res.height * k) / 2;
+  drawSheetFrame(x, L);
+  const { k, ox, oy } = L;
   x.strokeStyle = '#000';
   x.lineCap = 'round'; x.lineJoin = 'round';
   x.lineWidth = Math.max(3, res.lineWidth * k * 1.15);
@@ -1320,19 +1352,48 @@ async function renderSheet() {
     for (let i = 2; i < s.length; i += 2) x.lineTo(ox + s[i] * k, oy + s[i + 1] * k);
     x.stroke();
   }
-  spots.forEach((sp, i) => drawBadge(x, ox + sp.x * k, oy + sp.y * k, badgeR, i + 1));
-  return { canvas: c, landscape };
+  L.spots.forEach((sp, i) => drawBadge(x, ox + sp.x * k, oy + sp.y * k, L.badgeR, i + 1));
+  return { canvas: c, landscape: L.landscape };
 }
 
-$('#print').addEventListener('click', async () => {
-  if (!state.lines) return;
+// il foglio si prepara appena il disegno è finito: così "Stampa" apre la stampa
+// nello stesso tocco (su Android, dopo un'attesa, il browser blocca la finestra di stampa)
+async function prepareSheet() {
+  if (!state.lines) return null;
   const { canvas, landscape } = await renderSheet();
   $('#pageStyle').textContent = '@page { size: A4 ' + (landscape ? 'landscape' : 'portrait') + '; margin: 0; }';
   $('#printArea').classList.toggle('landscape', landscape);
   const img = $('#printImg');
-  img.src = canvas.toDataURL('image/jpeg', 0.75);
+  img.src = canvas.toDataURL('image/jpeg', 0.8);
   try { await img.decode(); } catch (e) {}
+  state.sheet = { canvas, lines: state.lines, nums: colorNumsOn() };
+  return state.sheet;
+}
+const sheetReady = () => state.sheet && state.sheet.lines === state.lines && state.sheet.nums === colorNumsOn();
+
+$('#print').addEventListener('click', async () => {
+  if (!state.lines) return;
+  $('#printHelp').hidden = false;
+  if (sheetReady()) { window.print(); return; }
+  await prepareSheet();
   window.print();
+});
+
+// strada di riserva: il foglio va al menu Condividi (app della stampante, Google Foto, Drive…)
+$('#shareSheet').addEventListener('click', async () => {
+  if (!state.lines) return;
+  const { canvas } = sheetReady() ? state.sheet : await prepareSheet();
+  const blob = await canvasToBlob(canvas, 'image/jpeg', 0.85);
+  const name = 'disegno-' + norm(firstName(state.img)).replace(/ /g, '-') + '.jpg';
+  const file = new File([blob], name, { type: 'image/jpeg' });
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try { await navigator.share({ files: [file], title: firstName(state.img) }); } catch (e) {}
+    return;
+  }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  toast('Foglio salvato tra i download: aprilo e stampalo da lì');
 });
 
 $('#savePng').addEventListener('click', async () => {
@@ -1341,7 +1402,7 @@ $('#savePng').addEventListener('click', async () => {
   const blob = await canvasToBlob(canvas, 'image/jpeg', 0.75);
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'matita-' + norm(firstName(state.img)).replace(/ /g, '-') + '.jpg';
+  a.download = 'disegno-' + norm(firstName(state.img)).replace(/ /g, '-') + '.jpg';
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 4000);
 });

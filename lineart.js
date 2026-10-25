@@ -710,6 +710,66 @@
     return { width: W0, height: H0, strokes, lineWidth: Math.max(2.5, dim / 190), mode: 'foto', soggetto: !!fg };
   }
 
+  /* ===================== Linee chiuse =====================
+   * Una linea che finisce a un soffio da un'altra lascia un varco: colorando, il colore "scappa".
+   * Per ogni estremità libera si cerca il punto più vicino di un'altra linea (o della stessa, ma
+   * lontano lungo il tratto) entro maxD; se c'è, il varco si chiude.
+   * Con toBorder anche le estremità vicine al bordo dell'immagine si collegano al bordo.
+   * Ritorna i collegamenti come [x0, y0, x1, y1, i, fine] (i = tratto, fine = 0 inizio / 1 fine).
+   */
+  function gapLinks(strokes, W, H, maxD, toBorder) {
+    const cell = Math.max(4, maxD), grid = new Map();
+    const keyOf = (x, y) => ((x / cell) | 0) + ',' + ((y / cell) | 0);
+    strokes.forEach((s, si) => {
+      let len = 0;
+      for (let k = 0; k < s.length; k += 2) {
+        if (k) len += Math.hypot(s[k] - s[k - 2], s[k + 1] - s[k - 1]);
+        const kk = keyOf(s[k], s[k + 1]);
+        if (!grid.has(kk)) grid.set(kk, []);
+        grid.get(kk).push([si, k, len]);
+      }
+    });
+    const lenOf = s => { let L = 0; for (let k = 2; k < s.length; k += 2) L += Math.hypot(s[k] - s[k - 2], s[k + 1] - s[k - 1]); return L; };
+    const links = [];
+    strokes.forEach((s, si) => {
+      if (s.length < 4) return;
+      const total = lenOf(s);
+      if (Math.hypot(s[0] - s[s.length - 2], s[1] - s[s.length - 1]) < 2 && total > 0) return; // già chiuso
+      for (const fine of [0, 1]) {
+        const ex = fine ? s[s.length - 2] : s[0], ey = fine ? s[s.length - 1] : s[1];
+        const endLen = fine ? total : 0;
+        let best = maxD, bx = 0, by = 0;
+        const cx = (ex / cell) | 0, cy = (ey / cell) | 0;
+        for (let gy = cy - 1; gy <= cy + 1; gy++) for (let gx = cx - 1; gx <= cx + 1; gx++) {
+          const list = grid.get(gx + ',' + gy);
+          if (!list) continue;
+          for (const [sj, k, len] of list) {
+            // sullo stesso tratto valgono solo i punti lontani lungo la linea (per chiudere un anello)
+            if (sj === si && Math.abs(len - endLen) < maxD * 3) continue;
+            const d = Math.hypot(strokes[sj][k] - ex, strokes[sj][k + 1] - ey);
+            if (d < best && d > 0.5) { best = d; bx = strokes[sj][k]; by = strokes[sj][k + 1]; }
+          }
+        }
+        if (best < maxD) { links.push([ex, ey, bx, by, si, fine]); continue; }
+        if (toBorder) {
+          const opts = [[ex, 0, ey], [ex, H, H - ey], [0, ey, ex], [W, ey, W - ex]].sort((a, b) => a[2] - b[2]);
+          if (opts[0][2] < maxD) links.push([ex, ey, opts[0][0], opts[0][1], si, fine]);
+        }
+      }
+    });
+    return links;
+  }
+
+  // chiude i varchi allungando le linee fino a toccare quella vicina
+  function closeGaps(strokes, W, H) {
+    const links = gapLinks(strokes, W, H, Math.max(W, H) * 0.03, false);
+    const out = strokes.map(s => s.slice());
+    for (const [, , bx, by, si, fine] of links) {
+      if (fine) out[si].push(bx, by); else out[si].unshift(bx, by);
+    }
+    return out;
+  }
+
   /* ===================== Numeri dei colori =====================
    * Sceglie fino a 3 zone del disegno finito (spazi chiusi tra le linee)
    * da numerare sul foglio. Preferisce zone grandi e con colori diversi
@@ -855,6 +915,7 @@
     let r;
     if (m === 'foto') r = extractPhoto(imageData, level, opts);
     else { r = extractDrawing(imageData, level); r.mode = 'disegno'; }
+    r.strokes = closeGaps(r.strokes, r.width, r.height);
     try { r.spots = pickColorSpots(imageData, r, 3); } catch (e) { r.spots = []; }
     return r;
   }
@@ -907,7 +968,7 @@
   }
 
   const isPhoto = imageData => looksLikePhoto(imageData.data, imageData.width * imageData.height);
-  const api = { extract, isPhoto, pickColorSpots, DETAIL, PHOTO };
+  const api = { extract, isPhoto, gapLinks, pickColorSpots, DETAIL, PHOTO };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.LineArt = api;
 })(typeof self !== 'undefined' ? self : this);

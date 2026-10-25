@@ -80,6 +80,20 @@
     const t = document.createElement('canvas'); t.width = w; t.height = h;
     const tx = t.getContext('2d', { willReadFrequently: true });
     tx.drawImage(lines, 0, 0, w, h);
+    // muri invisibili: chiudono i varchi rimasti tra le linee e fanno da bordo al disegno,
+    // così il secchiello e la modalità "Dentro i bordi" non scappano nel resto del foglio
+    const res = cs.forLines, k = L.k * s;
+    tx.save();
+    tx.strokeStyle = '#000'; tx.lineCap = 'round';
+    tx.setTransform(k, 0, 0, k, L.ox * s, L.oy * s);
+    tx.lineWidth = Math.max(2 / k, res.lineWidth);
+    tx.beginPath();
+    for (const [x0, y0, x1, y1] of LineArt.gapLinks(res.strokes, res.width, res.height, Math.max(res.width, res.height) * 0.06, true)) {
+      tx.moveTo(x0, y0); tx.lineTo(x1, y1);
+    }
+    tx.rect(0, 0, res.width, res.height);
+    tx.stroke();
+    tx.restore();
     const a = tx.getImageData(0, 0, w, h).data;
     freeCanvas(t);
     // le linee, un po' ingrossate per chiudere i piccoli varchi

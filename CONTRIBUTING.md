@@ -33,7 +33,7 @@ Apri prima una **issue** che spieghi il bisogno, non solo la soluzione: chi la u
 3. Niente dipendenze nuove e niente passaggi di build: il progetto deve restare un insieme di file statici.
 4. Prova su un tablet o telefono Android reale, oltre che sul computer.
 5. Se cambi un comportamento visibile, aggiorna anche la guida dentro l'app e il README.
-6. Se cambi i file in cache, aumenta il numero di versione in `sw.js` (`matita-v9` > `matita-v10`).
+6. Se cambi i file in cache, aumenta il numero di versione in `sw.js` (`matita-v10` > `matita-v11`).
 
 ### Stile
 

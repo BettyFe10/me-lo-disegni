@@ -1,4 +1,5 @@
 <!doctype html>
+<!-- SPDX-License-Identifier: AGPL-3.0-only - Matita - Copyright (C) 2026 Gli autori di Matita -->
 <html lang="it">
 <head>
 <meta charset="utf-8">
@@ -444,6 +445,7 @@ details.tune summary { min-height: 48px; display: flex; align-items: center; fon
         <dd>Tieni premuto <b class="key">Adulti</b>, trova quello da togliere e tocca <b class="key">Elimina</b> due volte.</dd>
       </dl>
     </article>
+    <p class="note">Matita è software libero, distribuito con licenza AGPL-3.0. Tutto resta su questo tablet: nessuna foto o immagine viene inviata altrove.<span id="srcNote" hidden> Il codice è qui: <a id="srcLink" href="#" target="_blank" rel="noopener"></a></span></p>
   </section>
 
   <!-- IMMAGINE CONDIVISA -->
@@ -1174,6 +1176,18 @@ $('#savePng').addEventListener('click', async () => {
   g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); opened = true; openAdmin(); } });
 })();
 $('#guideBtn').addEventListener('click', () => go('guide'));
+
+// link al codice sorgente: ricavato in automatico se l'app è pubblicata su GitHub Pages
+(() => {
+  const h = location.hostname;
+  if (!h.endsWith('.github.io')) return;
+  const user = h.replace(/\.github\.io$/, '');
+  const repo = location.pathname.split('/').filter(Boolean)[0] || h;
+  const url = 'https://github.com/' + user + '/' + repo;
+  $('#srcLink').href = url;
+  $('#srcLink').textContent = url.replace('https://', '');
+  $('#srcNote').hidden = false;
+})();
 
 function openAdmin() {
   renderAdmin();

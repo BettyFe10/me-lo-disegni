@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Matita - Copyright (C) 2026 Gli autori di Matita
 /* Matita - service worker: funziona anche offline e riceve le immagini dal menu Condividi */
 const CACHE = 'matita-v1';
 const SHELL = ['./', './index.html', './lineart.js', './manifest.webmanifest', './icon-192.png', './icon-512.png'];

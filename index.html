@@ -176,6 +176,12 @@ main {
   .tools { grid-template-columns: repeat(4, 1fr); }
   #cPaint { max-height: calc(100dvh - 130px); }
 }
+.startbox { display: grid; gap: 10px; padding: 12px; border-radius: var(--r-md); background: #FFF4D6; border: 2px solid #F2D48A; }
+.startbox p { margin: 0; font-size: 1.1rem; }
+.startbox svg { width: 30px; height: 30px; }
+.linesbox { display: grid; gap: 6px; background: var(--sheet); border: 2px solid var(--line); border-radius: var(--r-md); padding: 8px 10px; }
+.linesbox > span { font-size: .8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); text-align: center; }
+.linesbox .seg button { min-height: 52px; font-size: 1.05rem; }
 .printhelp { display: grid; gap: 8px; padding: 12px; border-radius: var(--r-md); background: var(--paper); border: 2px solid var(--line); }
 .printhelp p { margin: 0; color: var(--muted); }
 #cv { display: block; max-width: 100%; max-height: calc(100dvh - 300px); width: auto; height: auto; }
@@ -387,7 +393,13 @@ details.tune summary { min-height: 48px; display: flex; align-items: center; fon
           <div class="face" id="drawerFace"></div>
           <p><span id="drawerText">Disegna</span><small id="drawerWord"></small></p>
         </div>
-        <div class="actions">
+        <div class="startbox" id="startBox" hidden>
+          <p>Scegli la velocità e quante linee, poi tocca <b>Inizia</b>.</p>
+          <button class="btn big primary" id="startBtn" type="button">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.9l10.4-6.5a1 1 0 0 0 0-1.8L9.5 4.6A1 1 0 0 0 8 5.5z"/></svg>Inizia
+          </button>
+        </div>
+        <div class="actions" id="drawActions">
           <button class="btn big primary" id="print" type="button">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/></svg>Stampa
           </button>
@@ -414,13 +426,14 @@ details.tune summary { min-height: 48px; display: flex; align-items: center; fon
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
           </button>
         </div>
+        <div class="linesbox">
+          <span id="linesLabel">Linee</span>
+          <div class="seg" id="lineSeg" role="group" aria-labelledby="linesLabel">
+            <button type="button" data-v="1">Poche</button><button type="button" data-v="2">Normali</button><button type="button" data-v="3">Tante</button>
+          </div>
+        </div>
         <details class="tune" id="tune">
           <summary>Altre regolazioni</summary>
-          <div class="field"><span>Linee</span>
-            <div class="seg" id="lineSeg" role="group" aria-label="Quantità di linee">
-              <button type="button" data-v="1">Poche</button><button type="button" data-v="2">Normali</button><button type="button" data-v="3">Tante</button>
-            </div>
-          </div>
           <label class="switch"><input type="checkbox" id="colorNums"> Numeri dei colori (1, 2, 3)</label>
           <button class="btn small" id="savePng" type="button">Salva come immagine</button>
         </details>
@@ -521,7 +534,8 @@ details.tune summary { min-height: 48px; display: flex; align-items: center; fon
         <li><b>Scrivi</b> nella casella grande cosa vuoi disegnare, per esempio <b class="key">CANE</b>. Puoi anche saltare questo passo e toccare subito un disegno.</li>
         <li><b>Tocca il disegno</b> che vuoi.</li>
         <li><b>Tocca la faccia</b> di chi deve disegnare.</li>
-        <li><b>Guarda la matita</b> che disegna piano piano. Con <b class="key">−</b> va più piano, con <b class="key">+</b> va più veloce.</li>
+        <li>Scegli la <b>velocità</b> con <b class="key">−</b> e <b class="key">+</b> e quante <b>linee</b>: <b class="key">Poche</b>, <b class="key">Normali</b> o <b class="key">Tante</b>. Poi tocca <b class="key blue">Inizia</b>.</li>
+        <li><b>Guarda la matita</b> che disegna piano piano. Anche mentre disegna puoi cambiare la velocità.</li>
         <li>Alla fine compaiono i numeri <b class="key">1</b> <b class="key">2</b> <b class="key">3</b> su tre parti del disegno. Sul foglio, in basso, accanto a ogni numero lui scrive il colore di quella parte, per esempio <b class="key">NERO</b>.</li>
         <li>Quando ha finito tocca <b class="key blue">Stampa</b>. Si apre la pagina della stampante: controlla in alto che ci sia la stampante di casa, poi tocca il <b>pulsante tondo con la stampante</b>.</li>
       </ol>
@@ -598,7 +612,7 @@ details.tune summary { min-height: 48px; display: flex; align-items: center; fon
       <h3>Se qualcosa non va</h3>
       <dl class="faq">
         <dt>Il disegno ha troppe linee, o troppo poche</dt>
-        <dd>Sotto i pulsanti tocca <b>Altre regolazioni</b> e scegli <b class="key">Poche</b>, <b class="key">Normali</b> o <b class="key">Tante</b>. L'app se lo ricorda per quel disegno.</dd>
+        <dd>Tocca <b class="key">Di nuovo</b>, scegli <b class="key">Poche</b>, <b class="key">Normali</b> o <b class="key">Tante</b> e poi <b class="key blue">Inizia</b>. L'app se lo ricorda per quel disegno.</dd>
         <dt>Non voglio i numeri dei colori</dt>
         <dd>Tocca <b>Altre regolazioni</b> e togli la spunta a <b>Numeri dei colori</b>.</dd>
         <dt>Scrive una parola sbagliata</dt>
@@ -1020,7 +1034,7 @@ async function pickImage(rec) {
   } else {
     state.person = null;
     go('draw');
-    startDrawing();
+    prepareDraw();
   }
 }
 
@@ -1042,7 +1056,7 @@ function renderPeople() {
       prefs.set('lastPerson', p.id);
       history.replaceState({ screen: 'draw' }, '');
       show('draw');
-      startDrawing();
+      prepareDraw();
     });
     box.appendChild(b);
   }
@@ -1118,8 +1132,50 @@ function setupDrawer() {
   }
 }
 
+// prima di disegnare: foglio vuoto con le righe, si scelgono velocità e linee, poi "Inizia"
+function prepareDraw() {
+  stopAnim();
+  setupDrawer();
+  if (!state.person) $('#drawerText').textContent = 'Pronto per disegnare';
+  syncTune();
+  state.ready = true;
+  state.lines = null;
+  clearPen();
+  $('#startBox').hidden = false;
+  $('#drawActions').hidden = true;
+  $('#printHelp').hidden = true;
+  loadReadyLines();
+}
+let readyToken = 0;
+async function loadReadyLines() {
+  const tok = ++readyToken;
+  $('#busy').textContent = 'Preparo il foglio…';
+  $('#busy').hidden = false;
+  await new Promise(r => setTimeout(r, 40));
+  try {
+    const res = await getLines(state.img);
+    if (tok !== readyToken || !state.ready || state.screen !== 'draw') return;
+    state.lines = res;
+    setupPage(res);
+    $('#busy').hidden = true;
+  } catch (e) {
+    $('#busy').textContent = 'Non riesco ad aprire questa immagine.';
+  }
+}
+$('#startBtn').addEventListener('click', () => {
+  if (!state.ready || !state.img) return;
+  state.ready = false;
+  readyToken++;
+  $('#startBox').hidden = true;
+  $('#drawActions').hidden = false;
+  startDrawing();
+});
+
 async function startDrawing() {
   stopAnim();
+  state.ready = false;
+  $('#startBox').hidden = true;
+  $('#drawActions').hidden = false;
   setupDrawer();
   syncTune();
   $('#print').disabled = true;
@@ -1394,7 +1450,7 @@ function drawHand(x, y, u) {
   pctx.restore();
 }
 
-$('#again').addEventListener('click', () => { if (state.img) startDrawing(); });
+$('#again').addEventListener('click', () => { if (state.img) prepareDraw(); });
 
 /* ----- regolazioni ----- */
 function renderSpeed() {
@@ -1434,13 +1490,15 @@ function syncTune() {
 }
 $('#colorNums').addEventListener('change', e => {
   prefs.set('colorNums', e.target.checked);
-  if (!anim && state.lines) { paintAll(state.lines); prepareSheet().catch(() => {}); }
+  if (state.ready) { if (state.lines) setupPage(state.lines); }
+  else if (!anim && state.lines) { paintAll(state.lines); prepareSheet().catch(() => {}); }
 });
 $('#lineSeg').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b || !state.img) return;
   state.img.linee = Number(b.dataset.v);
   put('immagini', state.img).catch(() => {});
-  syncTune(); startDrawing();
+  syncTune();
+  if (state.ready) loadReadyLines(); else startDrawing();
 });
 
 /* ================= Stampa ================= */
@@ -1594,7 +1652,7 @@ function renderAdmin() {
     if (rec.esempio) { const t = document.createElement('span'); t.className = 'tag'; t.textContent = 'Esempio'; mid.appendChild(t); }
     const tools = document.createElement('div'); tools.className = 'tools';
     const tryB = document.createElement('button'); tryB.type = 'button'; tryB.className = 'btn small'; tryB.textContent = 'Prova';
-    tryB.addEventListener('click', () => { state.img = rec; state.person = null; go('draw'); startDrawing(); });
+    tryB.addEventListener('click', () => { state.img = rec; state.person = null; go('draw'); prepareDraw(); });
     const delB = document.createElement('button'); delB.type = 'button'; delB.className = 'btn small danger'; delB.textContent = 'Elimina';
     armDelete(delB, async () => { await del('immagini', rec.id); await reload(); renderAdmin(); toast('Eliminato'); });
     tools.append(tryB, delB);

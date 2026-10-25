@@ -1162,7 +1162,7 @@ async function keepAwake() {
 function releaseWake() { try { if (wakeLock) wakeLock.release(); } catch (e) {} wakeLock = null; }
 
 // le foto diventano disegni in un lavoratore separato: lo schermo non si blocca
-const LINE_VER = 4;
+const LINE_VER = 5;
 const ML_BASE = new URL('ml/', location.href).href;
 let worker = null, workerFailed = false, workerSeq = 0;
 const workerWait = new Map();

@@ -88,7 +88,7 @@
     tx.setTransform(k, 0, 0, k, L.ox * s, L.oy * s);
     tx.lineWidth = Math.max(2 / k, res.lineWidth);
     tx.beginPath();
-    for (const [x0, y0, x1, y1] of LineArt.gapLinks(res.strokes, res.width, res.height, Math.max(res.width, res.height) * 0.06, true)) {
+    for (const [x0, y0, x1, y1] of LineArt.gapLinks(res.strokes, res.width, res.height, Math.max(res.width, res.height) * 0.06, true, Math.max(res.width, res.height) * 0.12)) {
       tx.moveTo(x0, y0); tx.lineTo(x1, y1);
     }
     tx.rect(0, 0, res.width, res.height);

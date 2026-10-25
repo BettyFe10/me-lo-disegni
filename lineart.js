@@ -714,11 +714,13 @@
    * Una linea che finisce a un soffio da un'altra lascia un varco: colorando, il colore "scappa".
    * Per ogni estremità libera si cerca il punto più vicino di un'altra linea (o della stessa, ma
    * lontano lungo il tratto) entro maxD; se c'è, il varco si chiude.
+   * Se la linea "punta" verso un'altra (entro 35 gradi dalla sua direzione) si arriva fino a ahead:
+   * è il caso di un contorno interrotto poco prima di toccare un dettaglio.
    * Con toBorder anche le estremità vicine al bordo dell'immagine si collegano al bordo.
    * Ritorna i collegamenti come [x0, y0, x1, y1, i, fine] (i = tratto, fine = 0 inizio / 1 fine).
    */
-  function gapLinks(strokes, W, H, maxD, toBorder) {
-    const cell = Math.max(4, maxD), grid = new Map();
+  function gapLinks(strokes, W, H, maxD, toBorder, ahead = maxD * 3) {
+    const cell = Math.max(4, maxD), grid = new Map(), reach = Math.ceil(ahead / cell);
     const keyOf = (x, y) => ((x / cell) | 0) + ',' + ((y / cell) | 0);
     strokes.forEach((s, si) => {
       let len = 0;
@@ -738,19 +740,34 @@
       for (const fine of [0, 1]) {
         const ex = fine ? s[s.length - 2] : s[0], ey = fine ? s[s.length - 1] : s[1];
         const endLen = fine ? total : 0;
-        let best = maxD, bx = 0, by = 0;
+        // direzione in cui "andava" la linea, misurata su un pezzetto prima dell'estremità
+        let dx = 0, dy = 0;
+        {
+          let acc = 0, k = fine ? s.length - 2 : 0;
+          const step = fine ? -2 : 2;
+          while (k + step >= 0 && k + step < s.length && acc < maxD) {
+            acc += Math.hypot(s[k + step] - s[k], s[k + step + 1] - s[k + 1]); k += step;
+          }
+          dx = ex - s[k]; dy = ey - s[k + 1];
+          const L = Math.hypot(dx, dy) || 1; dx /= L; dy /= L;
+        }
+        let best = Infinity, bx = 0, by = 0;
         const cx = (ex / cell) | 0, cy = (ey / cell) | 0;
-        for (let gy = cy - 1; gy <= cy + 1; gy++) for (let gx = cx - 1; gx <= cx + 1; gx++) {
+        for (let gy = cy - reach; gy <= cy + reach; gy++) for (let gx = cx - reach; gx <= cx + reach; gx++) {
           const list = grid.get(gx + ',' + gy);
           if (!list) continue;
           for (const [sj, k, len] of list) {
             // sullo stesso tratto valgono solo i punti lontani lungo la linea (per chiudere un anello)
-            if (sj === si && Math.abs(len - endLen) < maxD * 3) continue;
-            const d = Math.hypot(strokes[sj][k] - ex, strokes[sj][k + 1] - ey);
-            if (d < best && d > 0.5) { best = d; bx = strokes[sj][k]; by = strokes[sj][k + 1]; }
+            if (sj === si && Math.abs(len - endLen) < Math.max(maxD * 3, ahead * 1.5)) continue;
+            const qx = strokes[sj][k] - ex, qy = strokes[sj][k + 1] - ey, d = Math.hypot(qx, qy);
+            if (d <= 0.5) continue;
+            // vicino in ogni direzione, oppure più lontano ma proprio davanti
+            const inFront = (qx * dx + qy * dy) / d > 0.82;
+            const score = d <= maxD ? d : (inFront && d <= ahead ? d * 1.5 : Infinity);
+            if (score < best) { best = score; bx = strokes[sj][k]; by = strokes[sj][k + 1]; }
           }
         }
-        if (best < maxD) { links.push([ex, ey, bx, by, si, fine]); continue; }
+        if (best < Infinity) { links.push([ex, ey, bx, by, si, fine]); continue; }
         if (toBorder) {
           const opts = [[ex, 0, ey], [ex, H, H - ey], [0, ey, ex], [W, ey, W - ex]].sort((a, b) => a[2] - b[2]);
           if (opts[0][2] < maxD) links.push([ex, ey, opts[0][0], opts[0][1], si, fine]);
@@ -762,7 +779,7 @@
 
   // chiude i varchi allungando le linee fino a toccare quella vicina
   function closeGaps(strokes, W, H) {
-    const links = gapLinks(strokes, W, H, Math.max(W, H) * 0.03, false);
+    const links = gapLinks(strokes, W, H, Math.max(W, H) * 0.03, false, Math.max(W, H) * 0.09);
     const out = strokes.map(s => s.slice());
     for (const [, , bx, by, si, fine] of links) {
       if (fine) out[si].push(bx, by); else out[si].unshift(bx, by);

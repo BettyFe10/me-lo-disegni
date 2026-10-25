@@ -71,7 +71,15 @@ button { cursor: pointer; }
 .gear { touch-action: none; user-select: none; -webkit-user-select: none; color: var(--muted); }
 .gear .fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: #DCE5FA; }
 .gear.holding .fill { transition: width 1.2s linear; width: 100%; }
-@media (max-width: 480px) { #guideBtn span { display: none; } }
+.logo span { white-space: nowrap; }
+@media (max-width: 480px) {
+  #guideBtn span { display: none; }
+  .bar { gap: 8px; }
+  .logo { font-size: 1.3rem; gap: 8px; }
+  .logo svg { width: 32px; height: 32px; }
+  .barbtns { flex-wrap: nowrap; gap: 6px; }
+  .pill { padding: 6px 12px; }
+}
 
 main {
   padding-left: max(16px, env(safe-area-inset-left, 0px));
@@ -428,6 +436,39 @@ details.tune summary { min-height: 48px; display: flex; align-items: center; fon
     </article>
 
     <article class="gbox">
+      <h3>Aggiungere tanti disegni insieme</h3>
+      <ol class="steps">
+        <li>Salva prima le immagini nella galleria del tablet (o del telefono, o nella cartella Immagini del computer).</li>
+        <li>In alto a destra <b>tieni il dito premuto</b> su <b class="key">Adulti</b> e resta su <b class="key">Disegni</b>.</li>
+        <li>Tocca <b class="key">Scegli dalla galleria</b> e seleziona tutte le immagini che vuoi.</li>
+        <li>Per ognuna scrivi le parole con cui lui la cercherà, separate da virgola, per esempio <b class="key">puffo, puffi, grande puffo</b>. Poi tocca <b class="key blue">Salva</b>.</li>
+      </ol>
+      <p class="note">Pensa alle parole che userà lui: anche soprannomi e modi di dire. Più parole metti, più è facile che trovi il disegno.</p>
+    </article>
+
+    <article class="gbox">
+      <h3>Preparare la galleria dal computer</h3>
+      <ol class="steps">
+        <li>Apri l'app in <b>Chrome</b> sul computer e aggiungi i disegni come spiegato sopra: con mouse e tastiera è più comodo.</li>
+        <li>Tieni premuto <b class="key">Adulti</b>, tocca <b class="key">Copia di sicurezza</b> e poi <b class="key blue">Salva copia</b>. Si scarica un file.</li>
+        <li>Manda il file al tablet, per esempio con Google Drive o via email.</li>
+        <li>Sul tablet tieni premuto <b class="key">Adulti</b>, tocca <b class="key">Copia di sicurezza</b> e poi <b class="key">Ripristina copia</b>, e scegli il file.</li>
+      </ol>
+    </article>
+
+    <article class="gbox">
+      <h3>Dove restano le immagini</h3>
+      <p>Disegni, foto e persone restano <b>solo su questo dispositivo</b>, dentro l'app: non vanno su internet e non li vede nessun altro. Ogni dispositivo ha la sua galleria: tablet, telefono e computer non si sincronizzano da soli.</p>
+      <p>Si perdono solo se disinstalli l'app o cancelli i dati di Chrome. Per sicurezza salva ogni tanto una <b>copia di sicurezza</b> e tienila su Drive o sul computer.</p>
+      <p>Gli esempi già presenti (i disegni e le foto degli animali) arrivano con l'app e si possono togliere come gli altri.</p>
+    </article>
+
+    <article class="gbox">
+      <h3>Tablet, telefono o computer</h3>
+      <p>L'app funziona su tutti e tre. Su tablet e telefono Android con Chrome si installa dal menu con i tre puntini, <b>Installa app</b>, e funziona anche senza internet. Sul computer si apre in Chrome o Edge come un sito, e si può installare con l'icona nella barra dell'indirizzo. Su iPhone e iPad si usa Safari, <b>Condividi</b> e poi <b>Aggiungi alla schermata Home</b>.</p>
+    </article>
+
+    <article class="gbox">
       <h3>Aggiungere una persona che disegna</h3>
       <ol class="steps">
         <li>In alto a destra <b>tieni il dito premuto</b> su <b class="key">Adulti</b> finché il pulsante si colora tutto (un secondo).</li>
@@ -435,6 +476,7 @@ details.tune summary { min-height: 48px; display: flex; align-items: center; fon
         <li>Scrivi il nome, tocca <b class="key">Scatta foto</b> oppure <b class="key">Dalla galleria</b>.</li>
         <li>Tocca <b class="key blue">Salva la persona</b>.</li>
       </ol>
+      <p class="note">Con la foto, mentre disegna si vede la sua faccia vicino alla matita. Senza foto si vede una mano che tiene la matita.</p>
     </article>
 
     <article class="gbox">
@@ -444,15 +486,17 @@ details.tune summary { min-height: 48px; display: flex; align-items: center; fon
         <dd>Sotto i pulsanti tocca <b>Altre regolazioni</b> e scegli <b class="key">Poche</b>, <b class="key">Normali</b> o <b class="key">Tante</b>. L'app se lo ricorda per quel disegno.</dd>
         <dt>Non voglio i numeri dei colori</dt>
         <dd>Tocca <b>Altre regolazioni</b> e togli la spunta a <b>Numeri dei colori</b>.</dd>
+        <dt>Scrive una parola sbagliata</dt>
+        <dd>Non importa: l'app capisce anche le parole scritte con qualche errore, per esempio <b class="key">GATO</b> per GATTO, <b class="key">CONIO</b> per CONIGLIO o <b class="key">KANE</b> per CANE, e sopra i disegni scrive "Forse volevi scrivere…".</dd>
         <dt>Scrive una parola e non esce niente</dt>
-        <dd>Quel disegno non c'è ancora. Aggiungilo come spiegato sopra.</dd>
+        <dd>Quel disegno non c'è ancora. Aggiungilo come spiegato sopra, e tra le parole metti anche quella che ha scritto lui.</dd>
         <dt>La stampa non parte</dt>
         <dd>Controlla che la stampante sia accesa e collegata allo stesso Wi-Fi del tablet. Nella pagina della stampante, in alto, deve esserci il suo nome.</dd>
         <dt>Voglio togliere un disegno o una persona</dt>
         <dd>Tieni premuto <b class="key">Adulti</b>, trova quello da togliere e tocca <b class="key">Elimina</b> due volte.</dd>
       </dl>
     </article>
-    <p class="note">Me lo disegni? è software libero, distribuito con licenza AGPL-3.0. Tutto resta su questo tablet: nessuna foto o immagine viene inviata altrove.<span id="srcNote" hidden> Il codice è qui: <a id="srcLink" href="#" target="_blank" rel="noopener"></a></span></p>
+    <p class="note">Me lo disegni? è software libero, distribuito con licenza AGPL-3.0. Tutto resta su questo dispositivo: nessuna foto o immagine viene inviata altrove. Le foto di esempio vengono da Pexels.<span id="srcNote" hidden> Il codice è qui: <a id="srcLink" href="#" target="_blank" rel="noopener"></a></span></p>
   </section>
 
   <!-- IMMAGINE CONDIVISA -->
@@ -692,9 +736,9 @@ async function makeImageRecord(file, nomi) {
 }
 
 /* ================= Esempi iniziali (disegni originali) ================= */
-// i disegni stanno nella cartella esempi/, elencati in esempi/elenco.json;
+// disegni e foto stanno nella cartella esempi/, elencati in esempi/elenco.json;
 // si ricordano quelli già aggiunti, così uno cancellato non torna e i nuovi arrivano anche a chi ha già l'app
-async function seedIfNeeded() {
+async function seedIfNeeded(onProgress) {
   let fatti = await getMeta('esempi');
   if (!Array.isArray(fatti)) fatti = (await getMeta('seeded')) ? ['zucca.svg', 'pesce.svg', 'casa.svg'] : [];
   let elenco;
@@ -704,14 +748,17 @@ async function seedIfNeeded() {
     try {
       const r = await fetch('esempi/' + s.file);
       if (!r.ok) continue;
-      const file = new Blob([await r.text()], { type: 'image/svg+xml' });
+      const file = s.file.endsWith('.svg') ? new Blob([await r.text()], { type: 'image/svg+xml' }) : await r.blob();
       const rec = await makeImageRecord(file, s.nomi);
       rec.esempio = true;
       await put('immagini', rec);
       fatti.push(s.file);
+      await setMeta('esempi', fatti);
+      if (onProgress && fatti.length % 6 === 0) await onProgress();
     } catch (e) {}
   }
   await setMeta('esempi', fatti);
+  if (onProgress) await onProgress();
   await setMeta('seeded', true);
 }
 
@@ -762,10 +809,56 @@ function search(q) {
       else if (n.startsWith(nq)) best = Math.max(best, 3);
       else if (sq.length >= 3 && stem(n).startsWith(sq)) best = Math.max(best, 3);
       else if (n.includes(nq) || (n.length >= 3 && nq.includes(n))) best = Math.max(best, 2);
+      else best = Math.max(best, simile(nq, n));
     }
     if (best) scored.push([best, rec]);
   }
-  return scored.sort((a, b) => b[0] - a[0] || byUse(a[1], b[1])).map(x => x[1]);
+  scored.sort((a, b) => b[0] - a[0] || byUse(a[1], b[1]));
+  const res = scored.map(x => x[1]);
+  // solo parole scritte con qualche errore: si suggerisce quella giusta
+  res.forse = scored.length > 0 && scored[0][0] < 2;
+  return res;
+}
+
+/* ----- parole scritte con errori: gato > gatto, conio > coniglio, kane > cane ----- */
+// toglie le differenze che contano poco: h, k/q al posto di c, j al posto di i, gli/li, doppie
+const semplice = s => s.replace(/h/g, '').replace(/[kq]/g, 'c').replace(/j/g, 'i').replace(/gli/g, 'li').replace(/(.)\1+/g, '$1');
+// errori ammessi: scambi, lettere in più o in meno (Damerau-Levenshtein ridotto)
+function distanza(a, b, max) {
+  if (Math.abs(a.length - b.length) > max) return max + 1;
+  let p2 = null, p = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    const c = [i];
+    let low = i;
+    for (let j = 1; j <= b.length; j++) {
+      let d = Math.min(p[j] + 1, c[j - 1] + 1, p[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      if (p2 && i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) d = Math.min(d, p2[j - 2] + 1);
+      c.push(d); low = Math.min(low, d);
+    }
+    if (low > max) return max + 1;
+    p2 = p; p = c;
+  }
+  return p[b.length];
+}
+// le lettere scritte ci sono tutte, nell'ordine giusto (conio dentro coniglio)
+function sottosequenza(q, n) {
+  let i = 0;
+  for (const ch of n) if (ch === q[i]) i++;
+  return i === q.length;
+}
+// quanto la parola scritta somiglia al nome: 0 per niente, poi più è alto più è vicina (sempre sotto 2)
+function simile(q, n) {
+  if (q.length < 3) return 0;
+  const a = semplice(q), b = semplice(n);
+  if (a === b) return 1.9;
+  if (a.length >= 3 && b.startsWith(a)) return 1.8;
+  const max = a.length >= 8 ? 2 : 1;
+  const d = distanza(a, b, max);
+  if (d <= max) return 1.7 - d * 0.2;
+  // anche solo l'inizio della parola: "elefan" > elefante, "ipopo" > ippopotamo
+  if (a.length >= 5 && a[0] === b[0] && b.length > a.length && distanza(a, b.slice(0, a.length), 1) <= 1) return 1.2;
+  if (a.length >= 4 && a[0] === b[0] && a.length >= b.length / 2 && sottosequenza(a, b)) return 1.1;
+  return 0;
 }
 function renderGrid() {
   const q = $('#q').value;
@@ -789,7 +882,7 @@ function renderGrid() {
   $('#emptyWord').textContent = q.trim();
   $('#askWho').textContent = state.supervisore || 'un adulto';
   $('#hint').hidden = res.length === 0;
-  $('#hint').textContent = q.trim() ? 'Tocca il disegno che vuoi.' : (state.images.length ? 'Scrivi una parola, oppure tocca un disegno.' : '');
+  $('#hint').textContent = q.trim() ? (res.forse ? 'Forse volevi scrivere ' + firstName(res[0]).toUpperCase() + '? Tocca il disegno che vuoi.' : 'Tocca il disegno che vuoi.') : (state.images.length ? 'Scrivi una parola, oppure tocca un disegno.' : '');
 }
 $('#q').addEventListener('input', renderGrid);
 $('#q').addEventListener('keydown', e => {
@@ -1573,11 +1666,12 @@ $('#suImport').addEventListener('change', async e => {
 /* ================= Avvio ================= */
 (async function init() {
   try {
-    await seedIfNeeded();
     await reload();
   } catch (e) {
     toast('Questo browser non può salvare i disegni');
   }
+  // gli esempi arrivano mentre l'app è già aperta: al primo avvio sono tanti
+  seedIfNeeded(async () => { await reload(); if (state.screen === 'home') renderGrid(); }).catch(() => {});
   let setupDone = true;
   try { setupDone = !!(await getMeta('setupDone')); } catch (e) {}
   if (!setupDone) {

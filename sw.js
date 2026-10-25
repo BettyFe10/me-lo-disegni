@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Me lo disegni? - Copyright (C) 2026 Gli autori di Me lo disegni?
 /* Me lo disegni? - service worker: funziona anche offline e riceve le immagini dal menu Condividi */
-const CACHE = 'matita-v3';
+const CACHE = 'matita-v4';
 const SHELL = ['./', './index.html', './lineart.js', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {

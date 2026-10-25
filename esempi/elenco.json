@@ -58,5 +58,305 @@
  {
   "file": "rana.svg",
   "nomi": "rana, ranocchio, rane"
+ },
+ {
+  "file": "foto/gatto.webp",
+  "nomi": "gatto, gattino, micio, gatti",
+  "pexels": "12652951"
+ },
+ {
+  "file": "foto/cane.webp",
+  "nomi": "cane, cagnolino, cani",
+  "pexels": "12354149"
+ },
+ {
+  "file": "foto/cavallo.webp",
+  "nomi": "cavallo, cavalli, pony",
+  "pexels": "18169425"
+ },
+ {
+  "file": "foto/mucca.webp",
+  "nomi": "mucca, mucche, vacca",
+  "pexels": "16979523"
+ },
+ {
+  "file": "foto/maiale.webp",
+  "nomi": "maiale, maialino, porco",
+  "pexels": "110820"
+ },
+ {
+  "file": "foto/pecora.webp",
+  "nomi": "pecora, pecore, agnello",
+  "pexels": "20829532"
+ },
+ {
+  "file": "foto/capra.webp",
+  "nomi": "capra, capre, caprone",
+  "pexels": "31181225"
+ },
+ {
+  "file": "foto/coniglio.webp",
+  "nomi": "coniglio, coniglietto, conigli",
+  "pexels": "4279632"
+ },
+ {
+  "file": "foto/gallina.webp",
+  "nomi": "gallina, galline, pollo",
+  "pexels": "16733493"
+ },
+ {
+  "file": "foto/pulcino.webp",
+  "nomi": "pulcino, pulcini",
+  "pexels": "7440694"
+ },
+ {
+  "file": "foto/anatra.webp",
+  "nomi": "anatra, papera, anatre",
+  "pexels": "15029327"
+ },
+ {
+  "file": "foto/oca.webp",
+  "nomi": "oca, oche",
+  "pexels": "14985352"
+ },
+ {
+  "file": "foto/asino.webp",
+  "nomi": "asino, asinello, ciuchino",
+  "pexels": "5519326"
+ },
+ {
+  "file": "foto/leone.webp",
+  "nomi": "leone, leoni",
+  "pexels": "2564889"
+ },
+ {
+  "file": "foto/tigre.webp",
+  "nomi": "tigre, tigri",
+  "pexels": "792381"
+ },
+ {
+  "file": "foto/elefante.webp",
+  "nomi": "elefante, elefanti",
+  "pexels": "1057366"
+ },
+ {
+  "file": "foto/giraffa.webp",
+  "nomi": "giraffa, giraffe",
+  "pexels": "802112"
+ },
+ {
+  "file": "foto/zebra.webp",
+  "nomi": "zebra, zebre",
+  "pexels": "1916645"
+ },
+ {
+  "file": "foto/scimmia.webp",
+  "nomi": "scimmia, scimmie, scimmietta",
+  "pexels": "1822603"
+ },
+ {
+  "file": "foto/gorilla.webp",
+  "nomi": "gorilla",
+  "pexels": "17999624"
+ },
+ {
+  "file": "foto/orso.webp",
+  "nomi": "orso, orsi, orsetto",
+  "pexels": "9877294"
+ },
+ {
+  "file": "foto/panda.webp",
+  "nomi": "panda",
+  "pexels": "7619819"
+ },
+ {
+  "file": "foto/koala.webp",
+  "nomi": "koala",
+  "pexels": "2590768"
+ },
+ {
+  "file": "foto/canguro.webp",
+  "nomi": "canguro, canguri",
+  "pexels": "2573494"
+ },
+ {
+  "file": "foto/ippopotamo.webp",
+  "nomi": "ippopotamo, ippopotami",
+  "pexels": "667201"
+ },
+ {
+  "file": "foto/rinoceronte.webp",
+  "nomi": "rinoceronte, rinoceronti",
+  "pexels": "17840163"
+ },
+ {
+  "file": "foto/coccodrillo.webp",
+  "nomi": "coccodrillo, coccodrilli",
+  "pexels": "3741492"
+ },
+ {
+  "file": "foto/serpente.webp",
+  "nomi": "serpente, serpenti, biscia",
+  "pexels": "9560352"
+ },
+ {
+  "file": "foto/tartaruga.webp",
+  "nomi": "tartaruga, tartarughe, testuggine",
+  "pexels": "762072"
+ },
+ {
+  "file": "foto/rana.webp",
+  "nomi": "rana, rane, ranocchio",
+  "pexels": "3458154"
+ },
+ {
+  "file": "foto/lucertola.webp",
+  "nomi": "lucertola, lucertole",
+  "pexels": "4235101"
+ },
+ {
+  "file": "foto/pappagallo.webp",
+  "nomi": "pappagallo, pappagalli",
+  "pexels": "1316295"
+ },
+ {
+  "file": "foto/gufo.webp",
+  "nomi": "gufo, civetta, gufi",
+  "pexels": "1543417"
+ },
+ {
+  "file": "foto/aquila.webp",
+  "nomi": "aquila, aquile",
+  "pexels": "4046070"
+ },
+ {
+  "file": "foto/pinguino.webp",
+  "nomi": "pinguino, pinguini",
+  "pexels": "3889695"
+ },
+ {
+  "file": "foto/fenicottero.webp",
+  "nomi": "fenicottero, fenicotteri",
+  "pexels": "1793463"
+ },
+ {
+  "file": "foto/cigno.webp",
+  "nomi": "cigno, cigni",
+  "pexels": "69474"
+ },
+ {
+  "file": "foto/delfino.webp",
+  "nomi": "delfino, delfini",
+  "pexels": "11342081"
+ },
+ {
+  "file": "foto/balena.webp",
+  "nomi": "balena, balene",
+  "pexels": "3309870"
+ },
+ {
+  "file": "foto/squalo.webp",
+  "nomi": "squalo, squali",
+  "pexels": "726478"
+ },
+ {
+  "file": "foto/pesce-rosso.webp",
+  "nomi": "pesce rosso, pesce, pesci",
+  "pexels": "4365566"
+ },
+ {
+  "file": "foto/polpo.webp",
+  "nomi": "polpo, piovra",
+  "pexels": "9652994"
+ },
+ {
+  "file": "foto/granchio.webp",
+  "nomi": "granchio, granchi",
+  "pexels": "3806139"
+ },
+ {
+  "file": "foto/medusa.webp",
+  "nomi": "medusa, meduse",
+  "pexels": "3699436"
+ },
+ {
+  "file": "foto/farfalla.webp",
+  "nomi": "farfalla, farfalle",
+  "pexels": "1126792"
+ },
+ {
+  "file": "foto/ape.webp",
+  "nomi": "ape, api",
+  "pexels": "1035224"
+ },
+ {
+  "file": "foto/coccinella.webp",
+  "nomi": "coccinella, coccinelle",
+  "pexels": "7419931"
+ },
+ {
+  "file": "foto/lumaca.webp",
+  "nomi": "lumaca, chiocciola, lumache",
+  "pexels": "7071021"
+ },
+ {
+  "file": "foto/volpe.webp",
+  "nomi": "volpe, volpi",
+  "pexels": "10428712"
+ },
+ {
+  "file": "foto/lupo.webp",
+  "nomi": "lupo, lupi",
+  "pexels": "682375"
+ },
+ {
+  "file": "foto/cervo.webp",
+  "nomi": "cervo, capriolo, cerbiatto",
+  "pexels": "2224547"
+ },
+ {
+  "file": "foto/scoiattolo.webp",
+  "nomi": "scoiattolo, scoiattoli",
+  "pexels": "1480598"
+ },
+ {
+  "file": "foto/riccio.webp",
+  "nomi": "riccio, porcospino",
+  "pexels": "7133412"
+ },
+ {
+  "file": "foto/topo.webp",
+  "nomi": "topo, topolino, topi",
+  "pexels": "2280794"
+ },
+ {
+  "file": "foto/criceto.webp",
+  "nomi": "criceto, criceti",
+  "pexels": "4520481"
+ },
+ {
+  "file": "foto/cammello.webp",
+  "nomi": "cammello, cammelli, dromedario",
+  "pexels": "2080195"
+ },
+ {
+  "file": "foto/struzzo.webp",
+  "nomi": "struzzo, struzzi",
+  "pexels": "208010"
+ },
+ {
+  "file": "foto/foca.webp",
+  "nomi": "foca, foche, leone marino",
+  "pexels": "3187036"
+ },
+ {
+  "file": "foto/lama.webp",
+  "nomi": "lama, alpaca",
+  "pexels": "4887717"
+ },
+ {
+  "file": "foto/tacchino.webp",
+  "nomi": "tacchino, tacchini",
+  "pexels": "7182025"
  }
 ]

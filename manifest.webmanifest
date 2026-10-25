@@ -1,0 +1,29 @@
+{
+  "name": "Matita",
+  "short_name": "Matita",
+  "description": "Scrivi cosa vuoi, scegli chi disegna, guarda il disegno nascere e stampalo da colorare.",
+  "lang": "it",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#EEF2FA",
+  "theme_color": "#2B55C9",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "share_target": {
+    "action": "./condividi",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "files": [
+        { "name": "immagine", "accept": ["image/*", ".jpg", ".jpeg", ".png", ".webp", ".gif"] }
+      ]
+    }
+  }
+}

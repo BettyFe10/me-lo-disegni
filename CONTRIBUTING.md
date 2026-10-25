@@ -1,10 +1,10 @@
-# Contribuire a Matita
+# Contribuire a Me lo disegni?
 
-Grazie per l'interesse. Matita è un progetto piccolo e curato nel tempo libero: le risposte possono richiedere qualche giorno.
+Grazie per l'interesse. Me lo disegni? è un progetto piccolo e curato nel tempo libero: le risposte possono richiedere qualche giorno.
 
 ## Per chi la usa
 
-Matita è pensata anche per bambini con autismo e per adulti poco pratici di tecnologia. Ogni proposta viene valutata con queste domande:
+L'app è pensata anche per bambini con autismo e per adulti poco pratici di tecnologia. Ogni proposta viene valutata con queste domande:
 
 - **Resta prevedibile?** Stesse schermate, stesso ordine, niente sorprese.
 - **Resta semplice?** Una funzione in più è una cosa in più da capire. Meglio poche cose fatte bene.
@@ -33,7 +33,7 @@ Apri prima una **issue** che spieghi il bisogno, non solo la soluzione: chi la u
 3. Niente dipendenze nuove e niente passaggi di build: il progetto deve restare un insieme di file statici.
 4. Prova su un tablet o telefono Android reale, oltre che sul computer.
 5. Se cambi un comportamento visibile, aggiorna anche la guida dentro l'app e il README.
-6. Se cambi i file in cache, aumenta il numero di versione in `sw.js` (`matita-v1` > `matita-v2`).
+6. Se cambi i file in cache, aumenta il numero di versione in `sw.js` (`matita-v2` > `matita-v3`).
 
 ### Stile
 

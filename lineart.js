@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Matita - Copyright (C) 2026 Gli autori di Matita
+// Me lo disegni? - Copyright (C) 2026 Gli autori di Me lo disegni?
 /*
- * Matita - estrazione dei contorni da un'immagine.
+ * Me lo disegni? - estrazione dei contorni da un'immagine.
  * Tutto gira sul dispositivo: nessun server, nessuna AI esterna.
  *
  * Pipeline:

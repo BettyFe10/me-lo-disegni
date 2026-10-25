@@ -1,8 +1,8 @@
-# Matita
+# Me lo disegni?
 
 Scrivi cosa vuoi disegnare, scegli chi lo disegna, guarda la matita tracciare i contorni piano piano e stampa il foglio da colorare.
 
-Matita è nata per un bambino a cui piace guardare qualcuno che disegna, e poi colorare su carta. Funziona su tablet Android come un'app normale, anche senza internet.
+Me lo disegni? è nata per un bambino a cui piace guardare qualcuno che disegna, e poi colorare su carta. Funziona su tablet Android come un'app normale, anche senza internet.
 
 ## Cosa fa
 
@@ -10,7 +10,7 @@ Matita è nata per un bambino a cui piace guardare qualcuno che disegna, e poi c
 - **Chi disegna**: si sceglie una persona tra quelle con la foto; la sua faccia accompagna la matita mentre disegna.
 - **Disegno lento**: la matita traccia i contorni un tratto alla volta, con 9 livelli di velocità regolabili anche durante il disegno.
 - **Foglio pronto da stampare**: A4 leggero, linee nere spesse, due righe in alto per scrivere titolo e nome.
-- **Menu Condividi di Android**: da Google Immagini si tiene premuta un'immagine, *Condividi immagine* > Matita, e finisce nella raccolta.
+- **Menu Condividi di Android**: da Google Immagini si tiene premuta un'immagine, *Condividi immagine* > Me lo disegni?, e finisce nella raccolta.
 - **Area adulti**: si apre tenendo premuto un secondo; qui si aggiungono disegni e persone.
 - **Guida integrata** con frasi semplici, pensata anche per chi non è pratico di tecnologia.
 
@@ -34,9 +34,9 @@ Ogni dispositivo ha il suo archivio: disegni e persone non si sincronizzano da s
 
 1. Fai un **fork** di questo repository (pulsante *Fork* in alto a destra).
 2. Nel tuo fork vai in **Settings > Pages**, in "Branch" scegli `main` e `/ (root)`, poi **Save**.
-3. Dopo un paio di minuti l'app sarà su `https://TUONOME.github.io/matita/`.
+3. Dopo un paio di minuti l'app sarà su `https://TUONOME.github.io/me-lo-disegni/`.
 4. Apri l'indirizzo in **Chrome** sul tablet > menu con i tre puntini > **Installa app**.
-5. Al primo avvio Matita chiede il nome dell'**adulto supervisore** e di **chi disegna**. Poi tieni premuto **Adulti** > **Chi disegna** per aggiungere le foto.
+5. Al primo avvio l'app chiede il nome dell'**adulto supervisore** e di **chi disegna**. Poi tieni premuto **Adulti** > **Chi disegna** per aggiungere le foto.
 
 Serve un indirizzo `https://`: senza, il menu Condividi e il funzionamento offline non partono. Va bene qualsiasi hosting statico (GitHub Pages, Netlify, Cloudflare Pages).
 
@@ -44,7 +44,7 @@ Per provarla al volo sul computer basta aprire `index.html` in Chrome: funziona 
 
 ### Consigli
 
-- Matita riconosce da sola se l'immagine è un disegno o una foto. Dai disegni ricalca le linee; le foto le semplifica in zone grandi e ne disegna i contorni. Le immagini già in bianco e nero restano quelle che vengono meglio: cerca "*nome* disegno da colorare".
+- L'app riconosce da sola se l'immagine è un disegno o una foto. Dai disegni ricalca le linee; le foto le semplifica in zone grandi e ne disegna i contorni. Le immagini già in bianco e nero restano quelle che vengono meglio: cerca "*nome* disegno da colorare".
 - Ogni tanto salva una **copia di sicurezza** dall'area Adulti: se cancelli i dati di Chrome, disegni e foto spariscono.
 - Se un disegno ha troppe o troppo poche linee: *Altre regolazioni* > Poche / Normali / Tante.
 

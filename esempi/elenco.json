@@ -358,5 +358,70 @@
   "file": "foto/tacchino.webp",
   "nomi": "tacchino, tacchini",
   "pexels": "7182025"
+ },
+ {
+  "file": "cartoni/braccio-di-ferro.webp",
+  "nomi": "braccio di ferro, popeye, marinaio"
+ },
+ {
+  "file": "cartoni/yellow-kid.webp",
+  "nomi": "yellow kid, bambino giallo"
+ },
+ {
+  "file": "cartoni/yellow-kid-2.webp",
+  "nomi": "yellow kid, bambino giallo"
+ },
+ {
+  "file": "cartoni/krazy-kat-2.webp",
+  "nomi": "krazy kat, gatto, gatto matto"
+ },
+ {
+  "file": "cartoni/peter-coniglio.webp",
+  "nomi": "peter coniglio, peter rabbit, coniglio"
+ },
+ {
+  "file": "cartoni/peter-coniglio-3.webp",
+  "nomi": "peter coniglio, peter rabbit, coniglio"
+ },
+ {
+  "file": "cartoni/dorothy.webp",
+  "nomi": "dorothy, mago di oz"
+ },
+ {
+  "file": "cartoni/leone-codardo.webp",
+  "nomi": "leone codardo, leone, mago di oz"
+ },
+ {
+  "file": "cartoni/leone-codardo-2.webp",
+  "nomi": "leone codardo, leone, mago di oz"
+ },
+ {
+  "file": "cartoni/raggedy-ann.webp",
+  "nomi": "raggedy ann, bambola di pezza, bambola"
+ },
+ {
+  "file": "cartoni/raggedy-ann-2.webp",
+  "nomi": "raggedy ann, bambola di pezza, bambola"
+ },
+ {
+  "file": "cartoni/raggedy-ann-4.webp",
+  "nomi": "raggedy ann, bambola di pezza, bambola"
+ },
+ {
+  "file": "cartoni/buster-brown.webp",
+  "nomi": "buster brown"
+ },
+ {
+  "file": "cartoni/cappuccetto-rosso.webp",
+  "nomi": "cappuccetto rosso, lupo"
+ },
+ {
+  "file": "cartoni/cappuccetto-rosso-2.webp",
+  "nomi": "cappuccetto rosso"
+ },
+ {
+  "file": "cartoni/pinocchio-2.webp",
+  "nomi": "pinocchio, burattino",
+  "modo": "foto"
  }
 ]

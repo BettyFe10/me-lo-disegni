@@ -2,7 +2,8 @@
 // Me lo disegni? - Copyright (C) 2026 Gli autori di Me lo disegni?
 /* Lavoratore in secondo piano: trova il soggetto (U²-Net) e calcola le linee,
  * così lo schermo non si blocca mentre una foto diventa un disegno.
- * Messaggi: { id, img: ImageData, lvl, key } -> { id, res } oppure { id, errore }
+ * Messaggi: { id, img: ImageData, lvl, modo, key } -> { id, res } oppure { id, errore }
+ * (modo: 'auto', 'disegno' o 'foto'; alcuni esempi lo fissano)
  */
 'use strict';
 importScripts('lineart.js');
@@ -68,11 +69,12 @@ self.onmessage = async ({ data: m }) => {
   try {
     if (m.tipo === 'precarica') { await loadModel(m.base); return; }
     let mask = m.key ? masks.get(m.key) : null;
-    if (!mask && self.LineArt.isPhoto(m.img)) {
+    const photo = m.modo ? m.modo === 'foto' : self.LineArt.isPhoto(m.img);
+    if (!mask && photo) {
       mask = await findSubject(m.img, m.base);
       if (mask && m.key) { masks.set(m.key, mask); if (masks.size > 6) masks.delete(masks.keys().next().value); }
     }
-    const res = self.LineArt.extract(m.img, m.lvl, 'auto', mask ? { mask } : {});
+    const res = self.LineArt.extract(m.img, m.lvl, m.modo || 'auto', mask ? { mask } : {});
     self.postMessage({ id: m.id, res });
   } catch (e) {
     self.postMessage({ id: m.id, errore: (e && e.name || 'Errore') + ': ' + (e && e.message || e) });

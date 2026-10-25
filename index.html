@@ -590,7 +590,7 @@ details.tune summary { min-height: 48px; display: flex; align-items: center; fon
       <h3>Dove restano le immagini</h3>
       <p>Disegni, foto e persone restano <b>solo su questo dispositivo</b>, dentro l'app: non vanno su internet e non li vede nessun altro. Ogni dispositivo ha la sua galleria: tablet, telefono e computer non si sincronizzano da soli.</p>
       <p>Si perdono solo se disinstalli l'app o cancelli i dati di Chrome. Per sicurezza salva ogni tanto una <b>copia di sicurezza</b> e tienila su Drive o sul computer.</p>
-      <p>Gli esempi già presenti (i disegni e le foto degli animali) arrivano con l'app e si possono togliere come gli altri.</p>
+      <p>Gli esempi già presenti (i disegni, le foto degli animali e i personaggi classici dei fumetti come Braccio di Ferro, Pinocchio o Cappuccetto Rosso) arrivano con l'app e si possono togliere come gli altri. I personaggi dei cartoni di oggi (Masha e Orso, Peppa Pig, Pokémon…) sono protetti dal diritto d'autore: puoi aggiungerli tu per uso privato, come spiegato sopra.</p>
     </article>
 
     <article class="gbox">
@@ -926,10 +926,15 @@ async function makeImageRecord(file, nomi) {
 /* ================= Esempi iniziali (disegni originali) ================= */
 // disegni e foto stanno nella cartella esempi/, elencati in esempi/elenco.json;
 // si ricordano quelli già aggiunti, così uno cancellato non torna e i nuovi arrivano anche a chi ha già l'app
-// linee degli esempi calcolate in anticipo (esempi/linee/<nome>.json), per tutti e tre i livelli
+// linee degli esempi calcolate in anticipo, per tutti e tre i livelli:
+// esempi/linee/<nome>.json, <nome>-foto.json (cartella foto/), <nome>-cartone.json (cartella cartoni/)
+const lineFile = file => {
+  const m = file.match(/^(?:(foto|cartoni)\/)?(.+)\.\w+$/);
+  return m[2] + (m[1] === 'foto' ? '-foto' : m[1] === 'cartoni' ? '-cartone' : '') + '.json';
+};
 async function readyLines(file, size) {
   try {
-    const r = await fetch('esempi/linee/' + file.replace(/^foto\//, '').replace(/\.\w+$/, '') + (file.startsWith('foto/') ? '-foto' : '') + '.json');
+    const r = await fetch('esempi/linee/' + lineFile(file));
     if (!r.ok) return null;
     const j = await r.json();
     return j.v === LINE_VER ? { ...j, size } : null;
@@ -948,6 +953,7 @@ async function seedIfNeeded(onProgress) {
       const file = s.file.endsWith('.svg') ? new Blob([await r.text()], { type: 'image/svg+xml' }) : await r.blob();
       const rec = await makeImageRecord(file, s.nomi);
       rec.esempio = true;
+      if (s.modo) rec.modo = s.modo;
       rec.pronte = await readyLines(s.file, rec.blob.size);
       await put('immagini', rec);
       fatti.push(s.file);
@@ -1211,17 +1217,17 @@ async function getLines(rec) {
   x.drawImage(bmp, 0, 0, w, h);
   if (bmp.close) bmp.close();
   const data = x.getImageData(0, 0, w, h);
-  const photo = LineArt.isPhoto(data);
+  const photo = rec.modo ? rec.modo === 'foto' : LineArt.isPhoto(data);
   if (photo) $('#busy').textContent = 'Guardo bene la foto…';
   let res = null;
   if (getWorker()) {
-    try { res = await inWorker({ img: data, lvl, key: rec.id + '_' + size }); } catch (e) { if (!workerFailed) { freeCanvas(c); throw e; } }
+    try { res = await inWorker({ img: data, lvl, modo: rec.modo, key: rec.id + '_' + size }); } catch (e) { if (!workerFailed) { freeCanvas(c); throw e; } }
   }
   if (!res) {
     // senza lavoratore (browser vecchi): tutto qui, con lo schermo fermo per qualche secondo
     let mask = null;
-    if (photo) { try { mask = await Soggetto.trova(c); } catch (e) { mask = null; } }
-    res = LineArt.extract(data, lvl, 'auto', mask ? { mask } : {});
+    if (photo || rec.modo === 'foto') { try { mask = await Soggetto.trova(c); } catch (e) { mask = null; } }
+    res = LineArt.extract(data, lvl, rec.modo || 'auto', mask ? { mask } : {});
   }
   freeCanvas(c);
   lineCache.set(key, res);

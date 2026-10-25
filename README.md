@@ -2,12 +2,12 @@
 
 Scrivi cosa vuoi disegnare, scegli chi lo disegna, guarda la matita tracciare i contorni piano piano e stampa il foglio da colorare.
 
-Me lo disegni? è nata per un bambino a cui piace guardare qualcuno che disegna, e poi colorare su carta. Funziona su tablet e telefoni Android come un'app normale, anche senza internet, e anche su computer, iPhone e iPad.
+Me lo disegni? è nata per una persona autistica adulta che ama i cartoni animati, guardare qualcuno che disegna e poi colorare su carta. Funziona su tablet e telefoni Android come un'app normale, anche senza internet, e anche su computer, iPhone e iPad.
 
 ## Cosa fa
 
 - **Ricerca a parole**: si scrive CANE e compaiono i disegni con quel nome. Capisce anche le parole scritte con errori (GATO, CONIO, KANE) e suggerisce quella giusta.
-- **75 esempi pronti**: 15 disegni originali e 60 foto di animali, che l'app trasforma in contorni da colorare.
+- **91 esempi pronti**: 15 disegni originali, 60 foto di animali e 16 personaggi classici dei fumetti in pubblico dominio (Braccio di Ferro, Pinocchio, Peter Coniglio, il Mago di Oz, Raggedy Ann, Cappuccetto Rosso…), che l'app trasforma in contorni da colorare.
 - **Chi disegna**: si sceglie una persona; se ha la foto la sua faccia accompagna la matita mentre disegna, altrimenti si vede una mano.
 - **Disegno lento**: la matita traccia i contorni un tratto alla volta, con 9 livelli di velocità regolabili anche durante il disegno.
 - **Colorare sullo schermo**: pennello, pennarello, matita colorata, pastello a cera, bomboletta spray, secchiello e gomma; colori con sfumature; modalità "Dentro i bordi" che tiene il colore nella zona; si salva l'immagine colorata.
@@ -73,4 +73,4 @@ Le proposte sono benvenute. Leggi [CONTRIBUTING.md](CONTRIBUTING.md) prima di ap
 
 [GNU AGPL-3.0](LICENSE). In breve: puoi usarla, studiarla, modificarla e ridistribuirla. Se pubblichi una versione modificata, anche come sito web, devi renderne disponibile il codice con la stessa licenza.
 
-I disegni di esempio nella cartella `esempi/` (zucca, pesce, casa e 12 animali) sono originali e coperti dalla stessa licenza. Le foto di animali in `esempi/foto/` vengono da Pexels e seguono la licenza Pexels: autori e link sono in [esempi/foto/CREDITI.md](esempi/foto/CREDITI.md). Per aggiungere un esempio basta mettere il file (SVG o WebP) nella cartella e una riga in `esempi/elenco.json`: arriva anche a chi ha già l'app. Le immagini che carichi tu restano tue e non fanno parte del progetto.
+I disegni di esempio nella cartella `esempi/` (zucca, pesce, casa e 12 animali) sono originali e coperti dalla stessa licenza. Le foto di animali in `esempi/foto/` vengono da Pexels e seguono la licenza Pexels: autori e link sono in [esempi/foto/CREDITI.md](esempi/foto/CREDITI.md). I personaggi in `esempi/cartoni/` sono in pubblico dominio e vengono da Wikimedia Commons: elenco in [esempi/cartoni/CREDITI.md](esempi/cartoni/CREDITI.md). Per aggiungere un esempio basta mettere il file (SVG o WebP) nella cartella e una riga in `esempi/elenco.json`: arriva anche a chi ha già l'app. Le immagini che carichi tu restano tue e non fanno parte del progetto.

@@ -508,6 +508,138 @@
     return { width: W0, height: H0, strokes, lineWidth: Math.max(2.5, dim / 190), mode: 'foto' };
   }
 
+  /* ===================== Numeri dei colori =====================
+   * Sceglie fino a 3 zone del disegno finito (spazi chiusi tra le linee)
+   * da numerare sul foglio. Preferisce zone grandi e con colori diversi
+   * nell'immagine originale, cosi' ogni numero corrisponde a un colore vero.
+   */
+  function pickColorSpots(imageData, res, howMany) {
+    const W0 = imageData.width, H0 = imageData.height, src = imageData.data;
+    const g = Math.min(1, 300 / Math.max(W0, H0));
+    const w = Math.max(8, Math.round(W0 * g)), h = Math.max(8, Math.round(H0 * g)), n = w * h;
+
+    // 1. linee rasterizzate su una griglia piccola (chiude i piccoli varchi)
+    const wall = new Uint8Array(n);
+    const rad = Math.max(1, (res.lineWidth / 2) * g);
+    const stamp = (x, y) => {
+      const r = Math.ceil(rad);
+      for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) {
+        if (dx * dx + dy * dy > rad * rad + 0.5) continue;
+        const xx = Math.round(x) + dx, yy = Math.round(y) + dy;
+        if (xx >= 0 && yy >= 0 && xx < w && yy < h) wall[yy * w + xx] = 1;
+      }
+    };
+    for (const s of res.strokes) {
+      for (let i = 2; i < s.length; i += 2) {
+        const x0 = s[i - 2] * g, y0 = s[i - 1] * g, x1 = s[i] * g, y1 = s[i + 1] * g;
+        const steps = Math.max(1, Math.ceil(Math.hypot(x1 - x0, y1 - y0) * 2));
+        for (let t = 0; t <= steps; t++) stamp(x0 + (x1 - x0) * t / steps, y0 + (y1 - y0) * t / steps);
+      }
+    }
+
+    // 2. zone chiuse
+    const reg = new Int32Array(n).fill(-1);
+    const stack = new Int32Array(n);
+    const regions = [];
+    for (let s0 = 0; s0 < n; s0++) {
+      if (wall[s0] || reg[s0] >= 0) continue;
+      const id = regions.length;
+      let top = 0, area = 0, border = false, r = 0, gg = 0, b = 0;
+      stack[top++] = s0; reg[s0] = id;
+      while (top) {
+        const i = stack[--top];
+        area++;
+        const x = i % w, y = (i / w) | 0;
+        if (x === 0 || y === 0 || x === w - 1 || y === h - 1) border = true;
+        const sx = Math.min(W0 - 1, Math.floor((x + 0.5) / g)), sy = Math.min(H0 - 1, Math.floor((y + 0.5) / g));
+        const p = (sy * W0 + sx) * 4, a = src[p + 3] / 255;
+        r += src[p] * a + 255 * (1 - a); gg += src[p + 1] * a + 255 * (1 - a); b += src[p + 2] * a + 255 * (1 - a);
+        if (x > 0 && !wall[i - 1] && reg[i - 1] < 0) { reg[i - 1] = id; stack[top++] = i - 1; }
+        if (x < w - 1 && !wall[i + 1] && reg[i + 1] < 0) { reg[i + 1] = id; stack[top++] = i + 1; }
+        if (y > 0 && !wall[i - w] && reg[i - w] < 0) { reg[i - w] = id; stack[top++] = i - w; }
+        if (y < h - 1 && !wall[i + w] && reg[i + w] < 0) { reg[i + w] = id; stack[top++] = i + w; }
+      }
+      const rgb = [r / area, gg / area, b / area];
+      regions.push({ id, area, border, rgb, lab: toLab(rgb[0], rgb[1], rgb[2]) });
+    }
+    if (!regions.length) return [];
+
+    // 3. scarta lo sfondo dei disegni e le zone minuscole
+    let cand = regions.filter(r => r.area >= n * 0.0015);
+    if (res.mode === 'disegno') {
+      const bg = regions.filter(r => r.border).sort((a, b) => b.area - a.area)[0];
+      cand = cand.filter(r => r !== bg);
+    }
+    if (!cand.length) return [];
+    const isBlank = r => r.lab[0] > 90 && Math.hypot(r.lab[1], r.lab[2]) < 8;
+    const colored = cand.filter(r => !isBlank(r));
+    const hasColors = colored.length > 0;
+    const pool = hasColors ? colored : cand;
+
+    // 4. punto più interno di ogni zona (lontano dalle linee)
+    const dist = new Float32Array(n);
+    for (let i = 0; i < n; i++) dist[i] = wall[i] ? 0 : 1e6;
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      const i = y * w + x; if (!dist[i]) continue;
+      let d = dist[i];
+      if (x > 0) d = Math.min(d, dist[i - 1] + 1);
+      if (y > 0) d = Math.min(d, dist[i - w] + 1);
+      if (x > 0 && y > 0) d = Math.min(d, dist[i - w - 1] + 1.4);
+      if (x < w - 1 && y > 0) d = Math.min(d, dist[i - w + 1] + 1.4);
+      if (x === 0 || y === 0 || x === w - 1 || y === h - 1) d = Math.min(d, 1);
+      dist[i] = d;
+    }
+    for (let y = h - 1; y >= 0; y--) for (let x = w - 1; x >= 0; x--) {
+      const i = y * w + x; if (!dist[i]) continue;
+      let d = dist[i];
+      if (x < w - 1) d = Math.min(d, dist[i + 1] + 1);
+      if (y < h - 1) d = Math.min(d, dist[i + w] + 1);
+      if (x < w - 1 && y < h - 1) d = Math.min(d, dist[i + w + 1] + 1.4);
+      if (x > 0 && y < h - 1) d = Math.min(d, dist[i + w - 1] + 1.4);
+      dist[i] = d;
+    }
+    const best = new Map();
+    for (let i = 0; i < n; i++) {
+      const id = reg[i]; if (id < 0) continue;
+      const cur = best.get(id);
+      if (!cur || dist[i] > cur.d) best.set(id, { d: dist[i], i });
+    }
+    for (const r of pool) {
+      const b = best.get(r.id);
+      r.cx = ((b.i % w) + 0.5) / g; r.cy = (((b.i / w) | 0) + 0.5) / g; r.depth = b.d / g;
+    }
+    // due livelli: zone comode (grandi) e zone accettabili (piccole ma il numero ci sta)
+    const dim = Math.max(W0, H0);
+    const roomy = pool.filter(r => r.area >= n * 0.006 && r.depth >= dim * 0.018);
+    const small = pool.filter(r => r.depth >= dim * 0.009);
+    const first = (roomy.length ? roomy : small.length ? small : pool).slice().sort((a, b) => b.area - a.area)[0];
+
+    // 5. scelta: la zona più grande, poi solo colori davvero diversi
+    const chosen = [first];
+    const far = dim * 0.1;
+    const colorDist = r => Math.min(...chosen.map(c => Math.hypot(c.lab[0] - r.lab[0], c.lab[1] - r.lab[1], c.lab[2] - r.lab[2])));
+    const DIFFERENT = 22; // sotto questa distanza due colori hanno lo stesso nome
+    while (chosen.length < howMany) {
+      let pick = null, score = -1;
+      for (const list of hasColors ? [roomy, small] : [roomy.length ? roomy : small]) {
+        for (const r of list) {
+          if (chosen.includes(r)) continue;
+          if (chosen.some(c => Math.hypot(c.cx - r.cx, c.cy - r.cy) < far)) continue;
+          const cd = colorDist(r);
+          if (hasColors && cd < DIFFERENT) continue;
+          const sc = Math.min(cd, 60) * 1000 + Math.sqrt(r.area);
+          if (sc > score) { score = sc; pick = r; }
+        }
+        if (pick) break; // si preferiscono le zone comode
+      }
+      if (!pick) break;
+      chosen.push(pick);
+    }
+    // numerati dall'alto in basso, da sinistra a destra: più facile da seguire
+    chosen.sort((a, b) => (a.cy - b.cy) || (a.cx - b.cx));
+    return chosen.map(r => ({ x: r.cx, y: r.cy, rgb: r.rgb.map(Math.round) }));
+  }
+
   /**
    * imageData: { width, height, data (RGBA) }
    * level: 1 | 2 | 3
@@ -517,9 +649,10 @@
   function extract(imageData, level, mode) {
     const m = mode === 'foto' || mode === 'disegno' ? mode
       : (looksLikePhoto(imageData.data, imageData.width * imageData.height) ? 'foto' : 'disegno');
-    if (m === 'foto') return extractPhoto(imageData, level);
-    const r = extractDrawing(imageData, level);
-    r.mode = 'disegno';
+    let r;
+    if (m === 'foto') r = extractPhoto(imageData, level);
+    else { r = extractDrawing(imageData, level); r.mode = 'disegno'; }
+    try { r.spots = pickColorSpots(imageData, r, 3); } catch (e) { r.spots = []; }
     return r;
   }
 
@@ -570,7 +703,7 @@
     return { width: w, height: h, strokes, lineWidth: Math.max(2.5, dim / 190) };
   }
 
-  const api = { extract, DETAIL, PHOTO };
+  const api = { extract, pickColorSpots, DETAIL, PHOTO };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.LineArt = api;
 })(typeof self !== 'undefined' ? self : this);

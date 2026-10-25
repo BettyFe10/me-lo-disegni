@@ -363,6 +363,7 @@ details.tune summary { min-height: 48px; display: flex; align-items: center; fon
               <button type="button" data-v="1">Poche</button><button type="button" data-v="2">Normali</button><button type="button" data-v="3">Tante</button>
             </div>
           </div>
+          <label class="switch"><input type="checkbox" id="colorNums"> Numeri dei colori (1, 2, 3)</label>
           <button class="btn small" id="savePng" type="button">Salva come immagine</button>
         </details>
       </div>
@@ -409,6 +410,7 @@ details.tune summary { min-height: 48px; display: flex; align-items: center; fon
         <li><b>Tocca il disegno</b> che vuoi.</li>
         <li><b>Tocca la faccia</b> di chi deve disegnare.</li>
         <li><b>Guarda la matita</b> che disegna piano piano. Con <b class="key">−</b> va più piano, con <b class="key">+</b> va più veloce.</li>
+        <li>Alla fine compaiono i numeri <b class="key">1</b> <b class="key">2</b> <b class="key">3</b> su tre parti del disegno. Sul foglio, in basso, accanto a ogni numero lui scrive il colore di quella parte, per esempio <b class="key">NERO</b>.</li>
         <li>Quando ha finito tocca <b class="key blue">Stampa</b>. Si apre la pagina della stampante: controlla in alto che ci sia la stampante di casa, poi tocca il <b>pulsante tondo con la stampante</b>.</li>
       </ol>
     </article>
@@ -440,6 +442,8 @@ details.tune summary { min-height: 48px; display: flex; align-items: center; fon
       <dl class="faq">
         <dt>Il disegno ha troppe linee, o troppo poche</dt>
         <dd>Sotto i pulsanti tocca <b>Altre regolazioni</b> e scegli <b class="key">Poche</b>, <b class="key">Normali</b> o <b class="key">Tante</b>. Matita se lo ricorda per quel disegno.</dd>
+        <dt>Non voglio i numeri dei colori</dt>
+        <dd>Tocca <b>Altre regolazioni</b> e togli la spunta a <b>Numeri dei colori</b>.</dd>
         <dt>Scrive una parola e non esce niente</dt>
         <dd>Quel disegno non c'è ancora. Aggiungilo come spiegato sopra.</dd>
         <dt>La stampa non parte</dt>
@@ -998,9 +1002,42 @@ function runAnimation(res) {
   a.raf = requestAnimationFrame(frame);
 }
 
+/* ----- numeri dei colori ----- */
+const colorNumsOn = () => !!prefs.get('colorNums', true);
+function drawBadge(x2, cx, cy, r, num) {
+  x2.save();
+  x2.beginPath(); x2.arc(cx, cy, r, 0, Math.PI * 2);
+  x2.fillStyle = '#fff'; x2.fill();
+  x2.lineWidth = Math.max(1.5, r * 0.16); x2.strokeStyle = '#000'; x2.stroke();
+  x2.fillStyle = '#000';
+  x2.font = '800 ' + Math.round(r * 1.25) + 'px "Baloo 2", "Trebuchet MS", system-ui, sans-serif';
+  x2.textAlign = 'center'; x2.textBaseline = 'middle';
+  x2.fillText(String(num), cx, cy + r * 0.08);
+  x2.restore();
+}
+function drawScreenBadges(res) {
+  if (!colorNumsOn() || !res.spots) return;
+  const r = Math.max(res.width, res.height) * 0.032;
+  res.spots.forEach((sp, i) => drawBadge(ctx, sp.x, sp.y, r, i + 1));
+}
+// ridisegna il foglio intero senza animazione (es. dopo aver cambiato un'opzione)
+function paintAll(res) {
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, res.width, res.height);
+  ctx.strokeStyle = '#15151A'; ctx.lineWidth = res.lineWidth;
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  for (const s of res.strokes) {
+    if (s.length < 4) continue;
+    ctx.beginPath(); ctx.moveTo(s[0], s[1]);
+    for (let i = 2; i < s.length; i += 2) ctx.lineTo(s[i], s[i + 1]);
+    ctx.stroke();
+  }
+  drawScreenBadges(res);
+}
+
 function finish() {
   pctx.clearRect(0, 0, pen.width, pen.height);
   anim = null;
+  if (state.lines) drawScreenBadges(state.lines);
   releaseWake();
   const p = state.person;
   $('#drawerText').textContent = p ? 'Disegnato da ' + p.nome : 'Finito!';
@@ -1092,7 +1129,12 @@ function syncTune() {
   renderSpeed();
   const ln = String((state.img && state.img.linee) || 2);
   $$('#lineSeg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === ln)));
+  $('#colorNums').checked = colorNumsOn();
 }
+$('#colorNums').addEventListener('change', e => {
+  prefs.set('colorNums', e.target.checked);
+  if (!anim && state.lines) paintAll(state.lines);
+});
 $('#lineSeg').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b || !state.img) return;
   state.img.linee = Number(b.dataset.v);
@@ -1126,7 +1168,28 @@ async function renderSheet() {
   x.moveTo(leftEnd + gap, lineY); x.lineTo(W - margin, lineY);
   x.stroke();
   const top = lineY + Math.round(10 * mm);
-  const availW = W - margin * 2, availH = H - top - margin;
+
+  // in basso a sinistra: una riga per ogni numero, dove lui scrive il colore
+  const spots = colorNumsOn() && res.spots ? res.spots : [];
+  const rowH = Math.round(12 * mm);
+  const bandH = spots.length ? spots.length * rowH + Math.round(6 * mm) : 0;
+  const badgeR = 4.2 * mm;
+  if (spots.length) {
+    const bandTop = H - margin - bandH;
+    const lineLen = Math.min(80 * mm, (W - margin * 2) * 0.5);
+    x.strokeStyle = '#000';
+    x.lineWidth = Math.max(2, Math.round(0.6 * mm));
+    spots.forEach((sp, i) => {
+      const ly = bandTop + Math.round(6 * mm) + (i + 1) * rowH - Math.round(2 * mm);
+      drawBadge(x, margin + badgeR, ly - badgeR * 0.9, badgeR, i + 1);
+      x.beginPath();
+      x.moveTo(margin + badgeR * 2 + 4 * mm, ly);
+      x.lineTo(margin + badgeR * 2 + 4 * mm + lineLen, ly);
+      x.stroke();
+    });
+  }
+
+  const availW = W - margin * 2, availH = H - top - margin - bandH;
   const k = Math.min(availW / res.width, availH / res.height);
   const ox = margin + (availW - res.width * k) / 2, oy = top + (availH - res.height * k) / 2;
   x.strokeStyle = '#000';
@@ -1139,6 +1202,7 @@ async function renderSheet() {
     for (let i = 2; i < s.length; i += 2) x.lineTo(ox + s[i] * k, oy + s[i + 1] * k);
     x.stroke();
   }
+  spots.forEach((sp, i) => drawBadge(x, ox + sp.x * k, oy + sp.y * k, badgeR, i + 1));
   return { canvas: c, landscape };
 }
 

@@ -186,6 +186,7 @@ main {
 .printhelp p { margin: 0; color: var(--muted); }
 #cv { display: block; max-width: 100%; max-height: calc(100dvh - 300px); width: auto; height: auto; }
 #pen { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.errdetail { display: block; margin-top: 10px; font-family: system-ui, sans-serif; font-weight: 400; font-size: .8rem; line-height: 1.3; color: var(--muted); max-width: 90%; }
 .busy { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--f-display); font-weight: 700; font-size: 1.5rem; color: var(--muted); background: var(--sheet); border-radius: 18px; }
 .side { display: flex; flex-direction: column; gap: 12px; }
 .drawer { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: var(--sheet); border-radius: var(--r-md); border: 2px solid var(--line); }
@@ -594,7 +595,8 @@ details.tune summary { min-height: 48px; display: flex; align-items: center; fon
 
     <article class="gbox">
       <h3>Tablet, telefono o computer</h3>
-      <p>L'app funziona su tutti e tre. Su tablet e telefono Android con Chrome si installa dal menu con i tre puntini, <b>Installa app</b>, e funziona anche senza internet. Sul computer si apre in Chrome o Edge come un sito, e si può installare con l'icona nella barra dell'indirizzo. Su iPhone e iPad si usa Safari, <b>Condividi</b> e poi <b>Aggiungi alla schermata Home</b>.</p>
+      <p>L'app funziona su tutti e tre. Su tablet e telefono Android con Chrome si installa dal menu con i tre puntini, <b>Installa app</b>, e funziona anche senza internet. Sul computer si apre in Chrome o Edge come un sito, e si può installare con l'icona nella barra dell'indirizzo. Su iPhone e iPad (Safari, ma anche Chrome, Brave o Opera) si tocca <b>Condividi</b> e poi <b>Aggiungi alla schermata Home</b>.</p>
+      <p>Una volta aperta la prima volta con internet, funziona anche <b>senza connessione</b>: disegni, foto ed esempi restano sul dispositivo. Quando torna internet si aggiorna da sola.</p>
     </article>
 
     <article class="gbox">
@@ -760,11 +762,62 @@ async function tx(store, mode, fn) {
   });
 }
 const req = r => new Promise((res, rej) => { r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
-const all = store => tx(store, 'readonly', st => req(st.getAll()));
-const put = (store, obj) => tx(store, 'readwrite', st => req(st.put(obj)));
-const del = (store, id) => tx(store, 'readwrite', st => req(st.delete(id)));
-const clearStore = store => tx(store, 'readwrite', st => req(st.clear()));
-const getMeta = async k => { const r = await tx('meta', 'readonly', st => req(st.get(k))); return r ? r.v : undefined; };
+
+// Le immagini si salvano come dati grezzi (ArrayBuffer) e non come Blob: Safari su iPhone,
+// e quindi anche Chrome, Brave e Opera su iPhone, in certi casi (navigazione privata) rifiuta i Blob.
+async function pack(obj) {
+  const out = {};
+  for (const [k, v] of Object.entries(obj)) out[k] = v instanceof Blob ? { __blob: await v.arrayBuffer(), type: v.type } : v;
+  return out;
+}
+function unpack(obj) {
+  if (!obj) return obj;
+  for (const [k, v] of Object.entries(obj)) if (v && v.__blob) obj[k] = new Blob([v.__blob], { type: v.type });
+  return obj;
+}
+
+// Se il browser non concede l'archivio (alcune navigazioni private), si lavora in memoria:
+// tutto funziona, ma si perde chiudendo la pagina.
+const mem = { immagini: new Map(), persone: new Map(), inbox: new Map(), meta: new Map() };
+let memNext = 1, useMem = false;
+async function dbOk() {
+  if (useMem) return false;
+  try { await db(); return true; } catch (e) {
+    useMem = true;
+    setTimeout(() => toast('Questo browser non tiene i disegni salvati: chiudendo la pagina si perdono'), 1500);
+    return false;
+  }
+}
+const keyOf = (store, obj) => store === 'meta' ? obj.k : obj.id;
+
+async function all(store) {
+  if (!(await dbOk())) return Array.from(mem[store].values());
+  return (await tx(store, 'readonly', st => req(st.getAll()))).map(unpack);
+}
+async function put(store, obj) {
+  if (!(await dbOk())) {
+    if (store !== 'meta' && obj.id == null) obj.id = memNext++;
+    mem[store].set(keyOf(store, obj), obj);
+    return keyOf(store, obj);
+  }
+  const packed = await pack(obj);
+  const id = await tx(store, 'readwrite', st => req(st.put(packed)));
+  if (store !== 'meta' && obj.id == null) obj.id = id;
+  return id;
+}
+async function del(store, id) {
+  if (!(await dbOk())) { mem[store].delete(id); return; }
+  return tx(store, 'readwrite', st => req(st.delete(id)));
+}
+async function clearStore(store) {
+  if (!(await dbOk())) { mem[store].clear(); return; }
+  return tx(store, 'readwrite', st => req(st.clear()));
+}
+async function getMeta(k) {
+  if (!(await dbOk())) { const r = mem.meta.get(k); return r ? r.v : undefined; }
+  const r = await tx('meta', 'readonly', st => req(st.get(k)));
+  return r ? r.v : undefined;
+}
 const setMeta = (k, v) => put('meta', { k, v });
 
 /* ================= Preferenze leggere ================= */
@@ -833,6 +886,9 @@ async function loadBitmap(blob) {
     return img;
   } finally { setTimeout(() => URL.revokeObjectURL(url), 2000); }
 }
+// Safari su iPhone ha un tetto alla memoria delle tele e la libera tardi:
+// le tele temporanee si svuotano appena non servono più
+function freeCanvas(c) { if (c) { c.width = 0; c.height = 0; } }
 function canvasToBlob(c, type, q) {
   return new Promise(res => c.toBlob(b => {
     if (b) res(b); else c.toBlob(res, 'image/png');
@@ -857,7 +913,9 @@ async function resizeBlob(blob, maxSide, type = 'image/webp', q = 0.95, square =
   x.imageSmoothingQuality = 'high';
   x.drawImage(bmp, sx, sy, sw, sh, 0, 0, w, h);
   if (bmp.close) bmp.close();
-  return canvasToBlob(c, type, q);
+  const out = await canvasToBlob(c, type, q);
+  freeCanvas(c);
+  return out;
 }
 async function makeImageRecord(file, nomi) {
   const blob = await resizeBlob(file, 1200);
@@ -1106,6 +1164,7 @@ async function getLines(rec) {
     $('#busy').textContent = 'Guardo bene la foto…';
     try { mask = await Soggetto.trova(c); } catch (e) { mask = null; }
   }
+  freeCanvas(c);
   const res = LineArt.extract(data, lvl, 'auto', mask ? { mask } : {});
   lineCache.set(key, res);
   return res;
@@ -1159,8 +1218,17 @@ async function loadReadyLines() {
     setupPage(res);
     $('#busy').hidden = true;
   } catch (e) {
-    $('#busy').textContent = 'Non riesco ad aprire questa immagine.';
+    showOpenError(e);
   }
+}
+// il dettaglio tecnico, piccolo, aiuta a capire cosa non va su un dispositivo che non si può provare
+function showOpenError(e) {
+  const b = $('#busy');
+  b.textContent = 'Non riesco ad aprire questa immagine.';
+  const d = document.createElement('small');
+  d.className = 'errdetail';
+  d.textContent = e ? String(e.name || 'Errore') + ': ' + String(e.message || e).slice(0, 160) : '';
+  b.appendChild(d);
 }
 $('#startBtn').addEventListener('click', () => {
   if (!state.ready || !state.img) return;
@@ -1188,7 +1256,7 @@ async function startDrawing() {
   try {
     res = await getLines(state.img);
   } catch (e) {
-    $('#busy').textContent = 'Non riesco ad aprire questa immagine.';
+    showOpenError(e);
     return;
   }
   if (state.screen !== 'draw') return;
@@ -1536,6 +1604,7 @@ async function prepareSheet() {
   const url = canvas.toDataURL('image/jpeg', 0.8);
   img.src = url;
   try { await img.decode(); } catch (e) {}
+  if (state.sheet && state.sheet.canvas !== canvas) freeCanvas(state.sheet.canvas);
   state.sheet = { canvas, url, landscape, lines: state.lines, nums: colorNumsOn() };
   return state.sheet;
 }
@@ -1902,7 +1971,10 @@ $('#suImport').addEventListener('change', async e => {
     toast('Questo browser non può salvare i disegni');
   }
   // gli esempi arrivano mentre l'app è già aperta: al primo avvio sono tanti
-  seedIfNeeded(async () => { await reload(); if (state.screen === 'home') renderGrid(); }).catch(() => {});
+  seedIfNeeded(async () => { await reload(); if (state.screen === 'home') renderGrid(); })
+    .catch(() => {})
+    // poi, con calma, il modello per le foto: così l'app funziona anche offline fin da subito
+    .then(() => setTimeout(() => { if (window.Soggetto) Soggetto.load(); }, 4000));
   let setupDone = true;
   try { setupDone = !!(await getMeta('setupDone')); } catch (e) {}
   if (!setupDone) {

@@ -40,6 +40,7 @@
     const x = c.getContext('2d', { willReadFrequently: true });
     x.drawImage(src, 0, 0, SIZE, SIZE);
     const d = x.getImageData(0, 0, SIZE, SIZE).data, n = SIZE * SIZE;
+    c.width = c.height = 0; // libera subito la tela (Safari su iPhone)
     let mx = 1;
     for (let i = 0; i < d.length; i += 4) mx = Math.max(mx, d[i], d[i + 1], d[i + 2]);
     // stessa preparazione dell'addestramento: valori 0..1, poi media e deviazione di ImageNet

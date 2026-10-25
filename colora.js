@@ -49,8 +49,8 @@
       for (const c of [paint, live, lines, seg]) { c.width = L.W; c.height = L.H; }
       drawLines(res, L);
       cs.regions = findRegions(L);
-      cs.masks.clear();
-      cs.undo = [];
+      cs.masks.forEach(freeCanvas); cs.masks.clear();
+      cs.undo.forEach(freeCanvas); cs.undo = [];
       px.clearRect(0, 0, L.W, L.H);
     }
     renderTools();
@@ -81,6 +81,7 @@
     const tx = t.getContext('2d', { willReadFrequently: true });
     tx.drawImage(lines, 0, 0, w, h);
     const a = tx.getImageData(0, 0, w, h).data;
+    freeCanvas(t);
     // le linee, un po' ingrossate per chiudere i piccoli varchi
     const wall0 = new Uint8Array(n);
     for (let i = 0; i < n; i++) wall0[i] = a[i * 4 + 3] > 60 ? 1 : 0;
@@ -152,8 +153,9 @@
     const bx = big.getContext('2d');
     bx.imageSmoothingEnabled = true;
     bx.drawImage(small, 0, 0, big.width, big.height);
+    freeCanvas(small);
     cs.masks.set(id, big);
-    if (cs.masks.size > 4) cs.masks.delete(cs.masks.keys().next().value);
+    if (cs.masks.size > 3) { const old = cs.masks.keys().next().value; freeCanvas(cs.masks.get(old)); cs.masks.delete(old); }
     return big;
   }
 
@@ -246,7 +248,7 @@
     c.width = paint.width; c.height = paint.height;
     c.getContext('2d').drawImage(paint, 0, 0);
     cs.undo.push(c);
-    if (cs.undo.length > 12) cs.undo.shift();
+    if (cs.undo.length > 8) freeCanvas(cs.undo.shift());
     $('#cUndo').disabled = false;
   }
 
@@ -261,6 +263,7 @@
     tx.globalCompositeOperation = 'source-in';
     tx.fillStyle = cs.color; tx.fillRect(0, 0, t.width, t.height);
     px.drawImage(t, 0, 0);
+    freeCanvas(t);
   }
 
   lines.addEventListener('pointerdown', e => {
@@ -315,7 +318,9 @@
   }
   $('#cSave').addEventListener('click', async () => {
     if (!cs.L) return;
-    const blob = await canvasToBlob(composed(), 'image/jpeg', 0.9);
+    const c = composed();
+    const blob = await canvasToBlob(c, 'image/jpeg', 0.9);
+    freeCanvas(c);
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = 'colorato-' + norm(firstName(state.img)).replace(/ /g, '-') + '.jpg';
@@ -329,6 +334,7 @@
     if (!c) return;
     px.clearRect(0, 0, paint.width, paint.height);
     px.drawImage(c, 0, 0);
+    freeCanvas(c);
     $('#cUndo').disabled = !cs.undo.length;
   });
   $('#cClear').addEventListener('click', () => { $('#cConfirm').hidden = false; });

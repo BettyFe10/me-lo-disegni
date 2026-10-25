@@ -236,8 +236,8 @@ details.tune summary { min-height: 48px; display: flex; align-items: center; fon
 .gbox { background: var(--sheet); border: 2px solid var(--line); border-radius: var(--r-lg); padding: 18px 20px; margin-bottom: 16px; max-width: 760px; }
 .gbox h3 { font-family: var(--f-display); font-weight: 800; font-size: 1.55rem; margin: 0 0 10px; }
 .steps { list-style: none; counter-reset: s; margin: 0; padding: 0; display: grid; gap: 14px; }
-.steps li { counter-increment: s; display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 12px; align-items: start; font-size: 1.15rem; line-height: 1.5; max-width: 65ch; }
-.steps li::before { content: counter(s); width: 44px; height: 44px; border-radius: 50%; background: var(--sun); color: var(--ink); display: grid; place-items: center; font-family: var(--f-display); font-weight: 800; font-size: 1.4rem; }
+.steps li { counter-increment: s; position: relative; min-height: 44px; padding: 7px 0 0 56px; font-size: 1.15rem; line-height: 1.5; max-width: 65ch; }
+.steps li::before { content: counter(s); position: absolute; left: 0; top: 0; width: 44px; height: 44px; border-radius: 50%; background: var(--sun); color: var(--ink); display: grid; place-items: center; font-family: var(--f-display); font-weight: 800; font-size: 1.4rem; }
 .key { display: inline-block; padding: 0 10px; border: 2px solid var(--line); border-radius: 8px; background: var(--paper); font-weight: 700; white-space: nowrap; }
 .key.blue { background: var(--accent); border-color: var(--accent); color: #fff; }
 .note { margin: 14px 0 0; color: var(--muted); font-size: 1.05rem; }
@@ -503,7 +503,7 @@ details.tune summary { min-height: 48px; display: flex; align-items: center; fon
       </div>
       <div class="box">
         <h3>Aggiungi una persona</h3>
-        <p>Per esempio un familiare o l'operatore. La sua faccia comparirà vicino alla matita mentre disegna.</p>
+        <p>Per esempio un familiare o l'operatore. Se aggiungi la sua foto, la sua faccia comparirà vicino alla matita mentre disegna; senza foto si vede una mano.</p>
         <div class="newperson">
           <div class="face big" id="npFace" aria-hidden="true">?</div>
           <div class="npform">
@@ -692,19 +692,26 @@ async function makeImageRecord(file, nomi) {
 }
 
 /* ================= Esempi iniziali (disegni originali) ================= */
-const SAMPLES = [
-  { nomi: 'zucca', svg: '<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><rect width="600" height="600" fill="#fff"/><g stroke="#111" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"><ellipse cx="300" cy="350" rx="230" ry="185" fill="#F28C28"/><path d="M300 168 C222 222 222 480 300 535" fill="none"/><path d="M300 168 C378 222 378 480 300 535" fill="none"/><path d="M190 200 C110 250 110 455 190 510" fill="none"/><path d="M410 200 C490 250 490 455 410 510" fill="none"/><rect x="276" y="110" width="48" height="70" rx="10" fill="#4C8C3A"/><path d="M324 140 C370 100 430 110 455 145 C410 170 365 168 324 140Z" fill="#6DB24E"/></g></svg>' },
-  { nomi: 'pesce', svg: '<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><rect width="600" height="600" fill="#fff"/><g stroke="#111" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"><path d="M430 300 L565 195 L540 300 L565 405 Z" fill="#3E7BD6"/><path d="M230 185 C270 110 345 110 370 185 Z" fill="#3E7BD6"/><ellipse cx="270" cy="300" rx="200" ry="130" fill="#58A6F0"/><path d="M250 320 C275 385 335 385 345 335 Z" fill="#3E7BD6"/><circle cx="150" cy="268" r="26" fill="#fff"/><circle cx="145" cy="268" r="11" fill="#111"/><path d="M84 330 C108 346 130 346 150 336" fill="none"/></g></svg>' },
-  { nomi: 'casa', svg: '<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><rect width="600" height="600" fill="#fff"/><g stroke="#111" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"><rect x="390" y="140" width="46" height="90" fill="#B4413A"/><rect x="130" y="270" width="340" height="260" fill="#F6D04D"/><path d="M100 285 L300 110 L500 285 Z" fill="#D9473B"/><rect x="258" y="392" width="88" height="138" fill="#8B5A2B"/><circle cx="330" cy="465" r="7" fill="#111"/><rect x="165" y="320" width="70" height="70" fill="#9FD3F5"/><path d="M200 320 V390 M165 355 H235" fill="none"/><rect x="368" y="320" width="70" height="70" fill="#9FD3F5"/><path d="M403 320 V390 M368 355 H438" fill="none"/></g></svg>' }
-];
+// i disegni stanno nella cartella esempi/, elencati in esempi/elenco.json;
+// si ricordano quelli già aggiunti, così uno cancellato non torna e i nuovi arrivano anche a chi ha già l'app
 async function seedIfNeeded() {
-  if (await getMeta('seeded')) return;
-  for (const s of SAMPLES) {
-    const file = new Blob([s.svg], { type: 'image/svg+xml' });
-    const rec = await makeImageRecord(file, s.nomi);
-    rec.esempio = true;
-    await put('immagini', rec);
+  let fatti = await getMeta('esempi');
+  if (!Array.isArray(fatti)) fatti = (await getMeta('seeded')) ? ['zucca.svg', 'pesce.svg', 'casa.svg'] : [];
+  let elenco;
+  try { elenco = await (await fetch('esempi/elenco.json')).json(); } catch (e) { return; }
+  for (const s of elenco) {
+    if (fatti.includes(s.file)) continue;
+    try {
+      const r = await fetch('esempi/' + s.file);
+      if (!r.ok) continue;
+      const file = new Blob([await r.text()], { type: 'image/svg+xml' });
+      const rec = await makeImageRecord(file, s.nomi);
+      rec.esempio = true;
+      await put('immagini', rec);
+      fatti.push(s.file);
+    } catch (e) {}
   }
+  await setMeta('esempi', fatti);
   await setMeta('seeded', true);
 }
 
@@ -1066,7 +1073,7 @@ function drawPen(x, y, u, w, h) {
   pctx.restore();
 
   const p = state.person;
-  if (!p) return;
+  if (!p || !faceImg) { drawHand(x, y, u); return; }
   // faccia di chi disegna, attaccata alla matita
   const d = u * 1.75 * Math.SQRT1_2;
   let cx = x + d + u * 0.35, cy = y - d - u * 0.35;
@@ -1079,17 +1086,35 @@ function drawPen(x, y, u, w, h) {
   pctx.restore();
   pctx.save();
   pctx.beginPath(); pctx.arc(cx, cy, R, 0, Math.PI * 2); pctx.clip();
-  if (faceImg) {
-    const s = Math.min(faceImg.width, faceImg.height);
-    pctx.drawImage(faceImg, (faceImg.width - s) / 2, (faceImg.height - s) / 2, s, s, cx - R, cy - R, R * 2, R * 2);
-  } else {
-    pctx.fillStyle = PALETTE[(p.colore || 0) % PALETTE.length];
-    pctx.fillRect(cx - R, cy - R, R * 2, R * 2);
-    pctx.fillStyle = '#fff';
-    pctx.font = '800 ' + Math.round(R * 1.1) + 'px "Baloo 2", system-ui, sans-serif';
-    pctx.textAlign = 'center'; pctx.textBaseline = 'middle';
-    pctx.fillText((p.nome || '?').charAt(0).toUpperCase(), cx, cy + R * 0.06);
+  const s = Math.min(faceImg.width, faceImg.height);
+  pctx.drawImage(faceImg, (faceImg.width - s) / 2, (faceImg.height - s) / 2, s, s, cx - R, cy - R, R * 2, R * 2);
+  pctx.restore();
+}
+
+// senza foto di chi disegna: una mano che tiene la matita
+function drawHand(x, y, u) {
+  const poly = (pts, fill) => {
+    pctx.beginPath(); pctx.moveTo(pts[0][0] * u, pts[0][1] * u);
+    for (const q of pts.slice(1)) pctx.lineTo(q[0] * u, q[1] * u);
+    pctx.closePath(); pctx.fillStyle = fill; pctx.fill(); pctx.stroke();
+  };
+  const oval = (cx, cy, rx, ry, rot, fill) => {
+    pctx.beginPath(); pctx.ellipse(cx * u, cy * u, rx * u, ry * u, rot, 0, Math.PI * 2);
+    pctx.fillStyle = fill; pctx.fill(); pctx.stroke();
+  };
+  pctx.save();
+  pctx.translate(x, y);
+  pctx.rotate(-Math.PI / 4);
+  pctx.lineJoin = 'round'; pctx.lineCap = 'round';
+  pctx.lineWidth = u * 0.04;
+  pctx.strokeStyle = 'rgba(22,29,51,.55)';
+  poly([[1.05, 0.02], [2.3, 0.62], [2.05, 1.05], [0.85, 0.42]], '#F3C9A0');
+  poly([[1.75, 0.36], [2.5, 0.72], [2.25, 1.18], [1.5, 0.8]], '#2B55C9');
+  oval(0.98, 0.17, 0.4, 0.3, 0.25, '#F3C9A0');
+  for (const fx of [0.78, 0.98, 1.18]) {
+    pctx.beginPath(); pctx.moveTo(fx * u, 0.08 * u); pctx.lineTo((fx - 0.04) * u, 0.3 * u); pctx.stroke();
   }
+  oval(0.74, -0.1, 0.24, 0.1, -0.15, '#F3C9A0');
   pctx.restore();
 }
 

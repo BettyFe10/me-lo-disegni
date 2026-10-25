@@ -7,7 +7,7 @@ Me lo disegni? è nata per un bambino a cui piace guardare qualcuno che disegna,
 ## Cosa fa
 
 - **Ricerca a parole**: si scrive CANE e compaiono i disegni con quel nome.
-- **Chi disegna**: si sceglie una persona tra quelle con la foto; la sua faccia accompagna la matita mentre disegna.
+- **Chi disegna**: si sceglie una persona; se ha la foto la sua faccia accompagna la matita mentre disegna, altrimenti si vede una mano.
 - **Disegno lento**: la matita traccia i contorni un tratto alla volta, con 9 livelli di velocità regolabili anche durante il disegno.
 - **Foglio pronto da stampare**: A4 leggero, linee nere spesse, due righe in alto per scrivere titolo e nome.
 - **Menu Condividi di Android**: da Google Immagini si tiene premuta un'immagine, *Condividi immagine* > Me lo disegni?, e finisce nella raccolta.
@@ -67,4 +67,4 @@ Le proposte sono benvenute. Leggi [CONTRIBUTING.md](CONTRIBUTING.md) prima di ap
 
 [GNU AGPL-3.0](LICENSE). In breve: puoi usarla, studiarla, modificarla e ridistribuirla. Se pubblichi una versione modificata, anche come sito web, devi renderne disponibile il codice con la stessa licenza.
 
-Le immagini di esempio incluse (zucca, pesce, casa) sono originali e coperte dalla stessa licenza. Le immagini che carichi tu restano tue e non fanno parte del progetto.
+Le immagini di esempio incluse, nella cartella `esempi/` (zucca, pesce, casa e 12 animali), sono originali e coperte dalla stessa licenza. Per aggiungerne una basta mettere il file SVG nella cartella e una riga in `esempi/elenco.json`: arriva anche a chi ha già l'app. Le immagini che carichi tu restano tue e non fanno parte del progetto.

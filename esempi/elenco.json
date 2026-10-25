@@ -1,0 +1,62 @@
+[
+ {
+  "file": "zucca.svg",
+  "nomi": "zucca"
+ },
+ {
+  "file": "pesce.svg",
+  "nomi": "pesce"
+ },
+ {
+  "file": "casa.svg",
+  "nomi": "casa"
+ },
+ {
+  "file": "gatto.svg",
+  "nomi": "gatto, gattino, micio"
+ },
+ {
+  "file": "cane.svg",
+  "nomi": "cane, cagnolino"
+ },
+ {
+  "file": "mucca.svg",
+  "nomi": "mucca, mucche"
+ },
+ {
+  "file": "maiale.svg",
+  "nomi": "maiale, maialino"
+ },
+ {
+  "file": "coniglio.svg",
+  "nomi": "coniglio, coniglietto"
+ },
+ {
+  "file": "pulcino.svg",
+  "nomi": "pulcino, pulcini"
+ },
+ {
+  "file": "elefante.svg",
+  "nomi": "elefante, elefanti"
+ },
+ {
+  "file": "leone.svg",
+  "nomi": "leone, leoni"
+ },
+ {
+  "file": "giraffa.svg",
+  "nomi": "giraffa, giraffe"
+ },
+ {
+  "file": "tartaruga.svg",
+  "nomi": "tartaruga, tartarughe"
+ },
+ {
+  "file": "farfalla.svg",
+  "nomi": "farfalla, farfalle"
+ },
+ {
+  "file": "rana.svg",
+  "nomi": "rana, ranocchio, rane"
+ }
+]

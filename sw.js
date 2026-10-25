@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Me lo disegni? - Copyright (C) 2026 Gli autori di Me lo disegni?
 /* Me lo disegni? - service worker: funziona anche offline e riceve le immagini dal menu Condividi */
-const CACHE = 'matita-v8';
-const SHELL = ['./', './index.html', './lineart.js', './soggetto.js', './colora.js', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
+const CACHE = 'matita-v9';
+const SHELL = ['./', './index.html', './lineart.js', './soggetto.js', './colora.js', './elabora.js', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));

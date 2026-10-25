@@ -33,7 +33,7 @@ Apri prima una **issue** che spieghi il bisogno, non solo la soluzione: chi la u
 3. Niente dipendenze nuove e niente passaggi di build: il progetto deve restare un insieme di file statici.
 4. Prova su un tablet o telefono Android reale, oltre che sul computer.
 5. Se cambi un comportamento visibile, aggiorna anche la guida dentro l'app e il README.
-6. Se cambi i file in cache, aumenta il numero di versione in `sw.js` (`matita-v8` > `matita-v9`).
+6. Se cambi i file in cache, aumenta il numero di versione in `sw.js` (`matita-v9` > `matita-v10`).
 
 ### Stile
 
@@ -44,3 +44,8 @@ Apri prima una **issue** che spieghi il bisogno, non solo la soluzione: chi la u
 ## Licenza dei contributi
 
 Inviando una pull request accetti che il tuo contributo sia distribuito con la licenza del progetto, la [GNU AGPL-3.0](LICENSE).
+
+## Linee già pronte degli esempi
+
+In `esempi/linee/` ci sono le linee degli esempi già calcolate, per i tre livelli, così sul tablet si aprono all'istante. Se cambi `lineart.js` o `elabora.js` in modo che il risultato cambi, aumenta `LINE_VER` in `index.html`: le linee vecchie vengono ignorate e l'app le ricalcola sul dispositivo (più lento, ma funziona). Poi, quando puoi, rigenera i file in `esempi/linee/` con la stessa versione.
+

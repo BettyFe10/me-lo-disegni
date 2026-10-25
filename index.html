@@ -926,6 +926,15 @@ async function makeImageRecord(file, nomi) {
 /* ================= Esempi iniziali (disegni originali) ================= */
 // disegni e foto stanno nella cartella esempi/, elencati in esempi/elenco.json;
 // si ricordano quelli già aggiunti, così uno cancellato non torna e i nuovi arrivano anche a chi ha già l'app
+// linee degli esempi calcolate in anticipo (esempi/linee/<nome>.json), per tutti e tre i livelli
+async function readyLines(file, size) {
+  try {
+    const r = await fetch('esempi/linee/' + file.replace(/^foto\//, '').replace(/\.\w+$/, '') + (file.startsWith('foto/') ? '-foto' : '') + '.json');
+    if (!r.ok) return null;
+    const j = await r.json();
+    return j.v === LINE_VER ? { ...j, size } : null;
+  } catch (e) { return null; }
+}
 async function seedIfNeeded(onProgress) {
   let fatti = await getMeta('esempi');
   if (!Array.isArray(fatti)) fatti = (await getMeta('seeded')) ? ['zucca.svg', 'pesce.svg', 'casa.svg'] : [];
@@ -939,6 +948,7 @@ async function seedIfNeeded(onProgress) {
       const file = s.file.endsWith('.svg') ? new Blob([await r.text()], { type: 'image/svg+xml' }) : await r.blob();
       const rec = await makeImageRecord(file, s.nomi);
       rec.esempio = true;
+      rec.pronte = await readyLines(s.file, rec.blob.size);
       await put('immagini', rec);
       fatti.push(s.file);
       await setMeta('esempi', fatti);
@@ -946,6 +956,14 @@ async function seedIfNeeded(onProgress) {
     } catch (e) {}
   }
   await setMeta('esempi', fatti);
+  // esempi aggiunti prima che esistessero le linee pronte (o con una versione vecchia)
+  for (const rec of await all('immagini')) {
+    if (!rec.esempio || (rec.pronte && rec.pronte.v === LINE_VER)) continue;
+    const s = elenco.find(e => e.nomi === rec.nomi);
+    if (!s) continue;
+    const p = await readyLines(s.file, rec.blob.size);
+    if (p) { rec.pronte = p; await put('immagini', rec); }
+  }
   if (onProgress) await onProgress();
   await setMeta('seeded', true);
 }
@@ -1143,10 +1161,45 @@ async function keepAwake() {
 }
 function releaseWake() { try { if (wakeLock) wakeLock.release(); } catch (e) {} wakeLock = null; }
 
+// le foto diventano disegni in un lavoratore separato: lo schermo non si blocca
+const LINE_VER = 3;
+const ML_BASE = new URL('ml/', location.href).href;
+let worker = null, workerFailed = false, workerSeq = 0;
+const workerWait = new Map();
+function getWorker() {
+  if (worker || workerFailed) return worker;
+  try {
+    worker = new Worker('elabora.js');
+    worker.onmessage = ({ data }) => {
+      const w = workerWait.get(data.id);
+      if (!w) return;
+      workerWait.delete(data.id);
+      if (data.errore) w.reject(new Error(data.errore)); else w.resolve(data.res);
+    };
+    worker.onerror = () => {
+      workerFailed = true; worker = null;
+      for (const w of workerWait.values()) w.reject(new Error('lavoratore non disponibile'));
+      workerWait.clear();
+    };
+  } catch (e) { workerFailed = true; worker = null; }
+  return worker;
+}
+function inWorker(msg) {
+  return new Promise((resolve, reject) => {
+    const id = ++workerSeq;
+    workerWait.set(id, { resolve, reject });
+    worker.postMessage({ ...msg, id, base: ML_BASE });
+  });
+}
+
 async function getLines(rec) {
   const lvl = rec.linee || 2;
-  const key = rec.id + '_' + lvl + '_' + (rec.blob ? rec.blob.size : 0) + '_v2';
+  const size = rec.blob ? rec.blob.size : 0;
+  const key = rec.id + '_' + lvl + '_' + size + '_v' + LINE_VER;
   if (lineCache.has(key)) return lineCache.get(key);
+  // gli esempi arrivano con le linee già pronte; le immagini proprie le salvano dopo il primo calcolo
+  const ready = rec.pronte && rec.pronte.v === LINE_VER && rec.pronte.size === size ? rec.pronte[lvl] : null;
+  if (ready) { lineCache.set(key, ready); return ready; }
   const bmp = await loadBitmap(rec.blob);
   const maxSide = Math.max(bmp.width, bmp.height);
   const k = maxSide > 800 ? 800 / maxSide : (maxSide < 500 ? 500 / maxSide : 1);
@@ -1158,15 +1211,25 @@ async function getLines(rec) {
   x.drawImage(bmp, 0, 0, w, h);
   if (bmp.close) bmp.close();
   const data = x.getImageData(0, 0, w, h);
-  // nelle foto il modello trova l'animale (o la persona, o l'oggetto) e lo separa dallo sfondo
-  let mask = null;
-  if (LineArt.isPhoto(data)) {
-    $('#busy').textContent = 'Guardo bene la foto…';
-    try { mask = await Soggetto.trova(c); } catch (e) { mask = null; }
+  const photo = LineArt.isPhoto(data);
+  if (photo) $('#busy').textContent = 'Guardo bene la foto…';
+  let res = null;
+  if (getWorker()) {
+    try { res = await inWorker({ img: data, lvl, key: rec.id + '_' + size }); } catch (e) { if (!workerFailed) { freeCanvas(c); throw e; } }
+  }
+  if (!res) {
+    // senza lavoratore (browser vecchi): tutto qui, con lo schermo fermo per qualche secondo
+    let mask = null;
+    if (photo) { try { mask = await Soggetto.trova(c); } catch (e) { mask = null; } }
+    res = LineArt.extract(data, lvl, 'auto', mask ? { mask } : {});
   }
   freeCanvas(c);
-  const res = LineArt.extract(data, lvl, 'auto', mask ? { mask } : {});
   lineCache.set(key, res);
+  if (rec.id != null) {
+    if (!(rec.pronte && rec.pronte.v === LINE_VER && rec.pronte.size === size)) rec.pronte = { v: LINE_VER, size };
+    rec.pronte[lvl] = res;
+    put('immagini', rec).catch(() => {});
+  }
   return res;
 }
 
@@ -1974,7 +2037,7 @@ $('#suImport').addEventListener('change', async e => {
   seedIfNeeded(async () => { await reload(); if (state.screen === 'home') renderGrid(); })
     .catch(() => {})
     // poi, con calma, il modello per le foto: così l'app funziona anche offline fin da subito
-    .then(() => setTimeout(() => { if (window.Soggetto) Soggetto.load(); }, 4000));
+    .then(() => setTimeout(() => { if (getWorker()) worker.postMessage({ tipo: 'precarica', base: ML_BASE }); }, 4000));
   let setupDone = true;
   try { setupDone = !!(await getMeta('setupDone')); } catch (e) {}
   if (!setupDone) {

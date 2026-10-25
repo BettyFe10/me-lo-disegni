@@ -56,6 +56,9 @@ Per provarla al volo sul computer basta aprire `index.html` in Chrome: funziona 
 | File | Cosa fa |
 |---|---|
 | `index.html` | l'app: interfaccia, archivio locale (IndexedDB), animazione, stampa |
+| `elabora.js` | lavoratore in secondo piano: trova il soggetto delle foto e calcola le linee senza bloccare lo schermo |
+| `colora.js` | la colorazione sullo schermo |
+| `ml/` | il modello U²-Net e ONNX Runtime (vedi `ml/LEGGIMI.md`) |
 | `lineart.js` | estrae i contorni da un'immagine e li ordina in tratti da disegnare |
 | `sw.js` | funzionamento offline e ricezione dal menu Condividi |
 | `manifest.webmanifest`, `icon-*.png` | nome, icona e integrazione con Android |

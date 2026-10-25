@@ -216,8 +216,10 @@ details.tune summary { min-height: 48px; display: flex; align-items: center; fon
 .chip button svg { width: 18px; height: 18px; }
 .chip.lead { background: #DCE5FA; border-color: #BFCDF2; padding-right: 16px; }
 .addrow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; }
-.setup > .btn.big { width: 100%; max-width: 760px; }
-.setup .box { max-width: 760px; margin-bottom: 14px; }
+.setup { max-width: 760px; margin: 0 auto; }
+.setup > .btn.big { width: 100%; }
+.setup .box { margin-bottom: 14px; }
+@media (max-width: 480px) { .actions .btn.big { font-size: 1.25rem; min-height: 64px; padding: 8px 10px; } }
 .linkish { color: var(--accent); font-weight: 700; text-decoration: underline; cursor: pointer; position: relative; }
 .tip { border-left: 4px solid var(--sun); padding: 8px 0 8px 14px; color: var(--ink); }
 .tip strong { font-weight: 700; }
@@ -248,6 +250,7 @@ details.tune summary { min-height: 48px; display: flex; align-items: center; fon
   bottom: calc(18px + env(safe-area-inset-bottom, 0px));
   background: var(--ink); color: #fff; padding: 12px 20px; border-radius: 999px; font-weight: 700;
   max-width: calc(100% - 32px); text-align: center; z-index: 50;
+  pointer-events: none; /* non deve mai coprire un pulsante */
 }
 
 /* ---------- stampa ---------- */
@@ -603,7 +606,13 @@ function toast(msg) {
   clearTimeout(toast.h); toast.h = setTimeout(() => { t.hidden = true; }, 2600);
 }
 const norm = s => (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim();
-const stem = s => (s.length > 3 && /[aeiou]$/.test(s) ? s.slice(0, -1) : s);
+// radice semplice per singolare e plurale: cane/cani, zucca/zucche, lago/laghi
+const stem = s => {
+  if (s.length <= 3) return s;
+  let r = /[aeiou]$/.test(s) ? s.slice(0, -1) : s;
+  if (/[cg]h$/.test(r)) r = r.slice(0, -1);
+  return r;
+};
 const names = rec => (rec.nomi || '').split(',').map(n => n.trim()).filter(Boolean);
 const firstName = rec => names(rec)[0] || 'disegno';
 function nameFromFile(fn) {

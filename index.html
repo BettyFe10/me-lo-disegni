@@ -135,6 +135,47 @@ main {
   display: grid; place-items: center; padding: 14px; min-height: 260px; position: relative;
 }
 .stage { position: relative; line-height: 0; }
+/* ---------- colorare ---------- */
+.btn.color { background: #FFF4D6; border-color: #F2D48A; }
+.actions:has(#colorBtn) { grid-template-columns: 1fr 1fr; }
+.actions:has(#colorBtn) #print { grid-column: 1 / -1; }
+.cstudio { display: grid; gap: 14px; margin-top: 8px; grid-template-columns: 1fr; }
+.cstage { position: relative; line-height: 0; background: #fff; border-radius: 12px; }
+.cstage canvas { display: block; }
+#cPaint { max-width: 100%; max-height: calc(100dvh - 220px); width: auto; height: auto; margin: 0 auto; }
+#cLive, #cLines { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+#cLines { touch-action: none; cursor: crosshair; }
+.cside { display: flex; flex-direction: column; gap: 10px; }
+.tools { display: grid; grid-template-columns: repeat(auto-fill, minmax(74px, 1fr)); gap: 6px; }
+.tools button { display: grid; justify-items: center; gap: 4px; padding: 8px 4px; min-height: 64px; border-radius: var(--r-md); border: 2px solid var(--line); background: var(--sheet); font-weight: 700; font-size: .78rem; line-height: 1.1; text-align: center; color: var(--ink); }
+.tools button svg { width: 26px; height: 26px; }
+.tools button[aria-pressed="true"] { border-color: var(--accent); background: #DCE5FA; box-shadow: inset 0 0 0 2px var(--accent); }
+.cbox { background: var(--sheet); border: 2px solid var(--line); border-radius: var(--r-md); padding: 10px; display: grid; gap: 8px; }
+.clabel { display: flex; align-items: center; justify-content: space-between; font-size: .8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.cnow { width: 34px; height: 22px; border-radius: 8px; border: 2px solid var(--line); }
+.palette { display: grid; grid-template-columns: repeat(auto-fill, minmax(38px, 1fr)); gap: 6px; }
+.swatch { aspect-ratio: 1; min-height: 38px; border-radius: 50%; border: 3px solid rgba(22,29,51,.15); }
+.swatch[aria-pressed="true"] { border-color: var(--ink); box-shadow: 0 0 0 3px #fff inset; }
+.shades .swatch { border-radius: 12px; }
+.custom { display: flex; align-items: center; gap: 10px; font-weight: 700; color: var(--muted); }
+.custom input { width: 56px; height: 40px; border: 0; background: none; padding: 0; }
+.crow { grid-template-columns: auto 1fr; align-items: center; gap: 14px; }
+.sizes { display: flex; gap: 8px; }
+.sizes button { width: 52px; height: 52px; display: grid; place-items: center; border-radius: 12px; border: 2px solid var(--line); background: var(--sheet); }
+.sizes button i { display: block; border-radius: 50%; background: var(--ink); }
+.sizes button[aria-pressed="true"] { border-color: var(--accent); background: #DCE5FA; }
+.cactions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.cactions .btn { min-height: 52px; font-size: 1rem; padding: 6px 8px; }
+.cactions .btn svg { width: 22px; height: 22px; }
+.cactions #cSave { grid-column: 1 / -1; }
+.confirm { display: grid; gap: 8px; padding: 12px; border-radius: var(--r-md); background: #FDECEA; border: 2px solid #EBC3BF; }
+.confirm p { margin: 0; font-weight: 700; }
+@media (min-width: 900px) and (orientation: landscape) {
+  .cstudio { grid-template-columns: minmax(0, 1fr) 330px; align-items: start; }
+  .cside { max-height: calc(100dvh - 120px); overflow-y: auto; padding-right: 2px; }
+  .tools { grid-template-columns: repeat(4, 1fr); }
+  #cPaint { max-height: calc(100dvh - 130px); }
+}
 .printhelp { display: grid; gap: 8px; padding: 12px; border-radius: var(--r-md); background: var(--paper); border: 2px solid var(--line); }
 .printhelp p { margin: 0; color: var(--muted); }
 #cv { display: block; max-width: 100%; max-height: calc(100dvh - 300px); width: auto; height: auto; }
@@ -350,6 +391,9 @@ details.tune summary { min-height: 48px; display: flex; align-items: center; fon
           <button class="btn big primary" id="print" type="button">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/></svg>Stampa
           </button>
+          <button class="btn big color" id="colorBtn" type="button" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21a9 9 0 1 1 9-9c0 2.5-2 3-3.5 3H15a2 2 0 0 0-1.5 3.3A1.6 1.6 0 0 1 12 21z"/><circle cx="7.5" cy="11" r="1.2"/><circle cx="10.5" cy="7" r="1.2"/><circle cx="15.5" cy="7.5" r="1.2"/></svg>Colora
+          </button>
           <button class="btn big" id="again" type="button">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>Di nuovo
           </button>
@@ -380,6 +424,60 @@ details.tune summary { min-height: 48px; display: flex; align-items: center; fon
           <label class="switch"><input type="checkbox" id="colorNums"> Numeri dei colori (1, 2, 3)</label>
           <button class="btn small" id="savePng" type="button">Salva come immagine</button>
         </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- COLORARE -->
+  <section id="color" hidden>
+    <button class="btn back" type="button" data-back>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>Indietro
+    </button>
+    <div class="cstudio">
+      <div class="paper cpaper">
+        <div class="cstage">
+          <canvas id="cPaint" width="10" height="10"></canvas>
+          <canvas id="cLive" width="10" height="10" aria-hidden="true"></canvas>
+          <canvas id="cLines" width="10" height="10" aria-label="Il disegno da colorare: tocca e trascina il dito per colorare"></canvas>
+        </div>
+      </div>
+      <div class="cside">
+        <div class="tools" id="tools" role="group" aria-label="Strumenti">
+          <button type="button" data-tool="pennello" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 14.5 19 5a1.4 1.4 0 0 1 2 2l-9.5 9.5"/><path d="M4 20c2.5 0 5-1.2 5-3.5A2.5 2.5 0 0 0 6.5 14C4.2 14 4 17 4 20z"/></svg><span>Pennello</span></button>
+          <button type="button" data-tool="pennarello" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4l6 6-9 9H5v-6z"/><path d="M12 6l6 6"/><path d="M5 19l-1 1"/></svg><span>Pennarello</span></button>
+          <button type="button" data-tool="matita" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l1.2-4.2L16 5l3 3L8.2 18.8z"/><path d="M14 7l3 3"/></svg><span>Matita colorata</span></button>
+          <button type="button" data-tool="cera" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7l-3-3L4 14z"/><path d="M17 7l3-1-1 3"/><path d="M6 15l3 3"/><path d="M3 21h6"/></svg><span>Pastello a cera</span></button>
+          <button type="button" data-tool="spray" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="9" width="8" height="12" rx="2"/><path d="M9 9V6h4v3"/><path d="M17 5h.01M20 3h.01M20 7h.01M18.5 9h.01"/></svg><span>Bomboletta spray</span></button>
+          <button type="button" data-tool="secchiello" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11l7-7 7 7-7 7z"/><path d="M4 11h14"/><path d="M20 15c0 1.8 1 2.6 1 3.5a1.5 1.5 0 0 1-3 0c0-.9 1-1.7 2-3.5z"/></svg><span>Riempi tutta la zona</span></button>
+          <button type="button" data-tool="gomma" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 15l8-8 6 6-6 6H9z"/><path d="M9 11l6 6"/><path d="M13 21h7"/></svg><span>Gomma</span></button>
+        </div>
+        <div class="cbox">
+          <div class="clabel"><span>Colori</span><i class="cnow" id="cNow"></i></div>
+          <div class="palette" id="palette"></div>
+          <div class="clabel"><span>Sfumature</span></div>
+          <div class="palette shades" id="shades"></div>
+          <label class="custom">Altri colori <input type="color" id="cCustom" value="#E53935"></label>
+        </div>
+        <div class="cbox crow">
+          <div class="sizes" id="sizes" role="group" aria-label="Grandezza">
+            <button type="button" data-s="0" aria-label="Sottile"><i style="width:10px;height:10px"></i></button>
+            <button type="button" data-s="1" aria-label="Medio"><i style="width:18px;height:18px"></i></button>
+            <button type="button" data-s="2" aria-label="Grosso"><i style="width:28px;height:28px"></i></button>
+          </div>
+          <label class="switch"><input type="checkbox" id="guided" checked> Dentro i bordi</label>
+        </div>
+        <div class="cactions">
+          <button class="btn" id="cUndo" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>Annulla</button>
+          <button class="btn" id="cClear" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>Ricomincia</button>
+          <button class="btn primary" id="cSave" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>Salva</button>
+        </div>
+        <div class="confirm" id="cConfirm" hidden>
+          <p>Cancello tutti i colori?</p>
+          <div class="cactions">
+            <button class="btn danger armed" id="cClearYes" type="button">Sì, cancella</button>
+            <button class="btn" id="cClearNo" type="button">No</button>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -427,6 +525,17 @@ details.tune summary { min-height: 48px; display: flex; align-items: center; fon
         <li>Alla fine compaiono i numeri <b class="key">1</b> <b class="key">2</b> <b class="key">3</b> su tre parti del disegno. Sul foglio, in basso, accanto a ogni numero lui scrive il colore di quella parte, per esempio <b class="key">NERO</b>.</li>
         <li>Quando ha finito tocca <b class="key blue">Stampa</b>. Si apre la pagina della stampante: controlla in alto che ci sia la stampante di casa, poi tocca il <b>pulsante tondo con la stampante</b>.</li>
       </ol>
+    </article>
+
+    <article class="gbox">
+      <h3>Colorare sullo schermo</h3>
+      <ol class="steps">
+        <li>Quando la matita ha finito, tocca <b class="key">Colora</b> invece di <b class="key blue">Stampa</b>.</li>
+        <li>Scegli lo strumento: <b>pennello</b>, <b>pennarello</b>, <b>matita colorata</b>, <b>pastello a cera</b>, <b>bomboletta spray</b>, il <b>secchiello</b> che riempie tutta una zona con un tocco, o la <b>gomma</b>.</li>
+        <li>Tocca un colore. Sotto compaiono le sue <b>sfumature</b>, dalla più chiara alla più scura. Con <b>Altri colori</b> si sceglie qualsiasi colore.</li>
+        <li>Scegli la grandezza (sottile, media, grossa) e colora trascinando il dito.</li>
+      </ol>
+      <p class="note">Con <b>Dentro i bordi</b> acceso il colore resta nella zona dove hai appoggiato il dito, anche se esci dalla linea. Spegnilo per colorare libero. <b class="key">Annulla</b> toglie l'ultimo tratto, <b class="key">Salva</b> mette il disegno colorato tra le immagini scaricate.</p>
     </article>
 
     <article class="gbox">
@@ -497,7 +606,7 @@ details.tune summary { min-height: 48px; display: flex; align-items: center; fon
         <dt>Scrive una parola e non esce niente</dt>
         <dd>Quel disegno non c'è ancora. Aggiungilo come spiegato sopra, e tra le parole metti anche quella che ha scritto lui.</dd>
         <dt>La stampa non parte</dt>
-        <dd>Controlla che la stampante sia accesa e collegata allo stesso Wi-Fi del tablet. Nella pagina della stampante, in alto, deve esserci il suo nome.</dd>
+        <dd>Controlla che la stampante sia accesa e collegata allo stesso Wi-Fi del tablet. Nella pagina della stampante, in alto, deve esserci il suo nome. Se la pagina della stampante non si apre proprio, tocca <b class="key">Condividi il foglio</b> e mandalo all'app della stampante (per esempio HP Smart o Epson) o a Google Foto, e stampa da lì.</dd>
         <dt>Voglio togliere un disegno o una persona</dt>
         <dd>Tieni premuto <b class="key">Adulti</b>, trova quello da togliere e tocca <b class="key">Elimina</b> due volte.</dd>
       </dl>
@@ -778,7 +887,7 @@ async function reload() {
 }
 
 /* ================= Navigazione (tasto Indietro di Android incluso) ================= */
-const SCREENS = ['home', 'who', 'draw', 'admin', 'inbox', 'guide', 'setup'];
+const SCREENS = ['home', 'who', 'draw', 'color', 'admin', 'inbox', 'guide', 'setup'];
 function show(name) {
   state.screen = name;
   for (const s of SCREENS) $('#' + s).hidden = s !== name;
@@ -1014,6 +1123,7 @@ async function startDrawing() {
   setupDrawer();
   syncTune();
   $('#print').disabled = true;
+  $('#colorBtn').disabled = true;
   $('#print').classList.remove('pulse');
   $('#busy').textContent = 'Preparo il foglio…';
   $('#busy').hidden = false;
@@ -1153,10 +1263,10 @@ function sheetLayout(res, mmPx) {
   };
 }
 // fondo bianco, due righe in alto (titolo e nome) e in basso una riga per ogni numero, dove lui scrive il colore
-function drawSheetFrame(x, L) {
+function drawSheetFrame(x, L, bianco = true) {
   x.save();
   x.setTransform(1, 0, 0, 1, 0, 0);
-  x.fillStyle = '#fff'; x.fillRect(0, 0, L.W, L.H);
+  if (bianco) { x.fillStyle = '#fff'; x.fillRect(0, 0, L.W, L.H); }
   x.strokeStyle = '#000'; x.lineWidth = L.lineW; x.lineCap = 'round';
   x.beginPath();
   x.moveTo(L.margin, L.lineY); x.lineTo(L.leftEnd, L.lineY);
@@ -1213,6 +1323,7 @@ function finish() {
   const p = state.person;
   $('#drawerText').textContent = p ? 'Disegnato da ' + p.nome : 'Finito!';
   $('#print').disabled = false;
+  $('#colorBtn').disabled = false;
   $('#print').classList.add('pulse');
   prepareSheet().catch(() => {});
 }
@@ -1364,12 +1475,13 @@ async function prepareSheet() {
   $('#pageStyle').textContent = '@page { size: A4 ' + (landscape ? 'landscape' : 'portrait') + '; margin: 0; }';
   $('#printArea').classList.toggle('landscape', landscape);
   const img = $('#printImg');
-  img.src = canvas.toDataURL('image/jpeg', 0.8);
+  const url = canvas.toDataURL('image/jpeg', 0.8);
+  img.src = url;
   try { await img.decode(); } catch (e) {}
-  state.sheet = { canvas, lines: state.lines, nums: colorNumsOn() };
+  state.sheet = { canvas, url, landscape, lines: state.lines, nums: colorNumsOn() };
   return state.sheet;
 }
-const sheetReady = () => state.sheet && state.sheet.lines === state.lines && state.sheet.nums === colorNumsOn();
+const sheetReady = () => !!state.sheet && state.sheet.lines === state.lines && state.sheet.nums === colorNumsOn();
 
 $('#print').addEventListener('click', async () => {
   if (!state.lines) return;
@@ -1755,5 +1867,6 @@ $('#suImport').addEventListener('change', async e => {
   });
 })();
 </script>
+<script src="colora.js"></script>
 </body>
 </html>

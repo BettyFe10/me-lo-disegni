@@ -10,6 +10,8 @@ Me lo disegni? è nata per un bambino a cui piace guardare qualcuno che disegna,
 - **75 esempi pronti**: 15 disegni originali e 60 foto di animali, che l'app trasforma in contorni da colorare.
 - **Chi disegna**: si sceglie una persona; se ha la foto la sua faccia accompagna la matita mentre disegna, altrimenti si vede una mano.
 - **Disegno lento**: la matita traccia i contorni un tratto alla volta, con 9 livelli di velocità regolabili anche durante il disegno.
+- **Colorare sullo schermo**: pennello, pennarello, matita colorata, pastello a cera, bomboletta spray, secchiello e gomma; colori con sfumature; modalità "Dentro i bordi" che tiene il colore nella zona; si salva l'immagine colorata.
+- **Foto vere trasformate bene**: un piccolo modello (U²-Net, in `ml/`) trova l'animale e lo separa dallo sfondo, tutto sul dispositivo.
 - **Foglio pronto da stampare**: A4 leggero, linee nere spesse, due righe in alto per scrivere titolo e nome.
 - **Menu Condividi di Android**: da Google Immagini si tiene premuta un'immagine, *Condividi immagine* > Me lo disegni?, e finisce nella raccolta.
 - **Area adulti**: si apre tenendo premuto un secondo; qui si aggiungono disegni e persone.

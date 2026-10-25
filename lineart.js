@@ -290,12 +290,240 @@
     return out;
   }
 
+  /* ===================== Modalità FOTO =====================
+   * Le foto (pelo, erba, cielo sfumato) non hanno contorni netti.
+   * Qui l'immagine viene divisa in poche zone di colore, le zone piccole
+   * vengono assorbite dalle vicine, e si disegnano i confini tra le zone:
+   * come chi ricalca una foto per farne un disegno da colorare.
+   */
+  const PHOTO = {
+    1: { k: 4, minArea: 0.012, minDark: 0.002, minLen: 14 },
+    2: { k: 6, minArea: 0.006, minDark: 0.0012, minLen: 10 },
+    3: { k: 8, minArea: 0.003, minDark: 0.0007, minLen: 8 }
+  };
+
+  // È una foto o un disegno? I disegni hanno molto bianco e inchiostro scuro.
+  function looksLikePhoto(rgba, n) {
+    let white = 0, dark = 0, step = Math.max(1, Math.floor(n / 40000)), tot = 0;
+    for (let i = 0; i < n; i += step) {
+      const p = i * 4;
+      const a = rgba[p + 3] / 255;
+      const lum = (0.299 * rgba[p] + 0.587 * rgba[p + 1] + 0.114 * rgba[p + 2]) * a + 255 * (1 - a);
+      if (lum > 232) white++;
+      else if (lum < 70) dark++;
+      tot++;
+    }
+    return white / tot < 0.35;
+  }
+
+  function toLab(r, g, b) {
+    const f = c => { c /= 255; return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
+    const R = f(r), G = f(g), B = f(b);
+    let X = (R * 0.4124 + G * 0.3576 + B * 0.1805) / 0.95047;
+    let Y = R * 0.2126 + G * 0.7152 + B * 0.0722;
+    let Z = (R * 0.0193 + G * 0.1192 + B * 0.9505) / 1.08883;
+    const g3 = t => (t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116);
+    X = g3(X); Y = g3(Y); Z = g3(Z);
+    return [116 * Y - 16, 500 * (X - Y), 200 * (Y - Z)];
+  }
+
+  // generatore pseudo-casuale fisso: stessa immagine, stesso disegno
+  function rng(seed) { return () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296); }
+
+  function segmentPhoto(imageData, cfg) {
+    const W0 = imageData.width, H0 = imageData.height;
+    const s = Math.min(1, 420 / Math.max(W0, H0));
+    const w = Math.max(8, Math.round(W0 * s)), h = Math.max(8, Math.round(H0 * s)), n = w * h;
+
+    // ricampionamento a media di blocco + conversione in Lab
+    const L = new Float32Array(n), A = new Float32Array(n), B = new Float32Array(n);
+    const src = imageData.data;
+    for (let y = 0; y < h; y++) {
+      const y0 = Math.floor(y / s), y1 = Math.max(y0 + 1, Math.floor((y + 1) / s));
+      for (let x = 0; x < w; x++) {
+        const x0 = Math.floor(x / s), x1 = Math.max(x0 + 1, Math.floor((x + 1) / s));
+        let r = 0, g = 0, b = 0, c = 0;
+        for (let yy = y0; yy < y1 && yy < H0; yy++) for (let xx = x0; xx < x1 && xx < W0; xx++) {
+          const p = (yy * W0 + xx) * 4, a = src[p + 3] / 255;
+          r += src[p] * a + 255 * (1 - a); g += src[p + 1] * a + 255 * (1 - a); b += src[p + 2] * a + 255 * (1 - a); c++;
+        }
+        const lab = toLab(r / c, g / c, b / c);
+        const i = y * w + x;
+        L[i] = lab[0]; A[i] = lab[1]; B[i] = lab[2];
+      }
+    }
+    // ammorbidisce il pelo e le texture
+    const Ls = boxBlur(boxBlur(L, w, h, 2), w, h, 2);
+    const As = boxBlur(boxBlur(A, w, h, 2), w, h, 2);
+    const Bs = boxBlur(boxBlur(B, w, h, 2), w, h, 2);
+
+    // k-means (k-means++ con seme fisso)
+    const k = cfg.k, rand = rng(12345);
+    const sample = [];
+    for (let i = 0; i < n; i += 3) sample.push(i);
+    const C = [];
+    C.push(sample[Math.floor(rand() * sample.length)]);
+    const cl = [], ca = [], cb = [];
+    cl.push(Ls[C[0]]); ca.push(As[C[0]]); cb.push(Bs[C[0]]);
+    const d2 = new Float32Array(sample.length).fill(Infinity);
+    while (cl.length < k) {
+      let sum = 0;
+      for (let j = 0; j < sample.length; j++) {
+        const i = sample[j], c = cl.length - 1;
+        const d = (Ls[i] - cl[c]) ** 2 + (As[i] - ca[c]) ** 2 + (Bs[i] - cb[c]) ** 2;
+        if (d < d2[j]) d2[j] = d;
+        sum += d2[j];
+      }
+      let t = rand() * sum, pick = sample[sample.length - 1];
+      for (let j = 0; j < sample.length; j++) { t -= d2[j]; if (t <= 0) { pick = sample[j]; break; } }
+      cl.push(Ls[pick]); ca.push(As[pick]); cb.push(Bs[pick]);
+    }
+    const lab = new Uint8Array(n);
+    for (let it = 0; it < 10; it++) {
+      const sl = new Float64Array(k), sa = new Float64Array(k), sb = new Float64Array(k), sc = new Float64Array(k);
+      for (const i of sample) {
+        let best = 0, bd = Infinity;
+        for (let c = 0; c < k; c++) {
+          const d = (Ls[i] - cl[c]) ** 2 + (As[i] - ca[c]) ** 2 + (Bs[i] - cb[c]) ** 2;
+          if (d < bd) { bd = d; best = c; }
+        }
+        sl[best] += Ls[i]; sa[best] += As[i]; sb[best] += Bs[i]; sc[best]++;
+      }
+      for (let c = 0; c < k; c++) if (sc[c]) { cl[c] = sl[c] / sc[c]; ca[c] = sa[c] / sc[c]; cb[c] = sb[c] / sc[c]; }
+    }
+    for (let i = 0; i < n; i++) {
+      let best = 0, bd = Infinity;
+      for (let c = 0; c < k; c++) {
+        const d = (Ls[i] - cl[c]) ** 2 + (As[i] - ca[c]) ** 2 + (Bs[i] - cb[c]) ** 2;
+        if (d < bd) { bd = d; best = c; }
+      }
+      lab[i] = best;
+    }
+
+    // filtro di maggioranza: toglie i puntini
+    let cur = lab;
+    const cnt = new Int32Array(k);
+    for (let pass = 0; pass < 4; pass++) {
+      const nx = new Uint8Array(n);
+      for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+        cnt.fill(0);
+        for (let dy = -2; dy <= 2; dy++) {
+          const yy = clamp(y + dy, 0, h - 1);
+          for (let dx = -2; dx <= 2; dx++) cnt[cur[yy * w + clamp(x + dx, 0, w - 1)]]++;
+        }
+        let best = cur[y * w + x], bc = cnt[best];
+        for (let c = 0; c < k; c++) if (cnt[c] > bc) { bc = cnt[c]; best = c; }
+        nx[y * w + x] = best;
+      }
+      cur = nx;
+    }
+
+    // zone troppo piccole -> assorbite dalla vicina più presente
+    // (quelle scure, come occhi e narici, sono protette da una soglia più bassa)
+    const minArea = Math.max(20, Math.round(cfg.minArea * n));
+    const minDark = Math.max(8, Math.round(cfg.minDark * n));
+    const comp = new Int32Array(n);
+    const stack = new Int32Array(n);
+    for (let round = 0; round < 3; round++) {
+      comp.fill(-1);
+      let id = 0, changed = false;
+      for (let s0 = 0; s0 < n; s0++) {
+        if (comp[s0] >= 0) continue;
+        const c0 = cur[s0];
+        const pix = [];
+        let top = 0;
+        stack[top++] = s0; comp[s0] = id;
+        while (top) {
+          const i = stack[--top];
+          pix.push(i);
+          const x = i % w, y = (i / w) | 0;
+          if (x > 0 && comp[i - 1] < 0 && cur[i - 1] === c0) { comp[i - 1] = id; stack[top++] = i - 1; }
+          if (x < w - 1 && comp[i + 1] < 0 && cur[i + 1] === c0) { comp[i + 1] = id; stack[top++] = i + 1; }
+          if (y > 0 && comp[i - w] < 0 && cur[i - w] === c0) { comp[i - w] = id; stack[top++] = i - w; }
+          if (y < h - 1 && comp[i + w] < 0 && cur[i + w] === c0) { comp[i + w] = id; stack[top++] = i + w; }
+        }
+        const limit = cl[c0] < 30 ? minDark : minArea;
+        if (pix.length < limit) {
+          cnt.fill(0);
+          for (const i of pix) {
+            const x = i % w, y = (i / w) | 0;
+            if (x > 0 && cur[i - 1] !== c0) cnt[cur[i - 1]]++;
+            if (x < w - 1 && cur[i + 1] !== c0) cnt[cur[i + 1]]++;
+            if (y > 0 && cur[i - w] !== c0) cnt[cur[i - w]]++;
+            if (y < h - 1 && cur[i + w] !== c0) cnt[cur[i + w]]++;
+          }
+          let best = -1, bc = 0;
+          for (let c = 0; c < k; c++) if (cnt[c] > bc) { bc = cnt[c]; best = c; }
+          if (best >= 0) { for (const i of pix) cur[i] = best; changed = true; }
+        }
+        id++;
+      }
+      if (!changed) break;
+    }
+
+    // confini tra zone diverse
+    const mask = new Uint8Array(n);
+    for (let y = 0; y < h - 1; y++) for (let x = 0; x < w - 1; x++) {
+      const i = y * w + x;
+      if (cur[i] !== cur[i + 1] || cur[i] !== cur[i + w]) mask[i] = 1;
+    }
+    return { mask, w, h, scale: s };
+  }
+
+  // Arrotonda gli spigoli (Chaikin): linee più morbide, da mano vera
+  function smoothStroke(f, iters) {
+    let pts = f;
+    for (let t = 0; t < iters; t++) {
+      const n = pts.length / 2;
+      if (n < 3) return pts;
+      const closed = Math.hypot(pts[0] - pts[2 * n - 2], pts[1] - pts[2 * n - 1]) < 2;
+      const out = closed ? [] : [pts[0], pts[1]];
+      for (let i = 0; i < n - 1; i++) {
+        const x0 = pts[2 * i], y0 = pts[2 * i + 1], x1 = pts[2 * i + 2], y1 = pts[2 * i + 3];
+        out.push(0.75 * x0 + 0.25 * x1, 0.75 * y0 + 0.25 * y1, 0.25 * x0 + 0.75 * x1, 0.25 * y0 + 0.75 * y1);
+      }
+      if (closed) out.push(out[0], out[1]);
+      else out.push(pts[2 * n - 2], pts[2 * n - 1]);
+      pts = out;
+    }
+    return pts;
+  }
+
+  function extractPhoto(imageData, level) {
+    const cfg = PHOTO[level] || PHOTO[2];
+    const W0 = imageData.width, H0 = imageData.height;
+    const seg = segmentPhoto(imageData, cfg);
+    const { w, h, scale } = seg;
+    const mask = seg.mask;
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      if (x < 2 || y < 2 || x >= w - 2 || y >= h - 2) mask[y * w + x] = 0;
+    }
+    thin(mask, w, h);
+    const inv = 1 / scale;
+    let strokes = trace(mask, w, h, cfg.minLen)
+      .map(s => smoothStroke(simplify(s, 1.1), 2))
+      .map(s => s.map(v => v * inv));
+    strokes = order(strokes);
+    const dim = Math.max(W0, H0);
+    return { width: W0, height: H0, strokes, lineWidth: Math.max(2.5, dim / 190), mode: 'foto' };
+  }
+
   /**
    * imageData: { width, height, data (RGBA) }
    * level: 1 | 2 | 3
-   * Ritorna { width, height, strokes: [[x0,y0,x1,y1,...], ...], lineWidth }
+   * mode: 'auto' | 'disegno' | 'foto'
+   * Ritorna { width, height, strokes: [[x0,y0,x1,y1,...], ...], lineWidth, mode }
    */
-  function extract(imageData, level) {
+  function extract(imageData, level, mode) {
+    const m = mode === 'foto' || mode === 'disegno' ? mode
+      : (looksLikePhoto(imageData.data, imageData.width * imageData.height) ? 'foto' : 'disegno');
+    if (m === 'foto') return extractPhoto(imageData, level);
+    const r = extractDrawing(imageData, level);
+    r.mode = 'disegno';
+    return r;
+  }
+
+  function extractDrawing(imageData, level) {
     const cfg = DETAIL[level] || DETAIL[2];
     const w = imageData.width, h = imageData.height, n = w * h;
     const dim = Math.max(w, h);
@@ -342,7 +570,7 @@
     return { width: w, height: h, strokes, lineWidth: Math.max(2.5, dim / 190) };
   }
 
-  const api = { extract, DETAIL };
+  const api = { extract, DETAIL, PHOTO };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.LineArt = api;
 })(typeof self !== 'undefined' ? self : this);

@@ -44,7 +44,7 @@ Per provarla al volo sul computer basta aprire `index.html` in Chrome: funziona 
 
 ### Consigli
 
-- Le immagini già in bianco e nero vengono meglio delle foto: cerca "*nome* disegno da colorare".
+- Matita riconosce da sola se l'immagine è un disegno o una foto. Dai disegni ricalca le linee; le foto le semplifica in zone grandi e ne disegna i contorni. Le immagini già in bianco e nero restano quelle che vengono meglio: cerca "*nome* disegno da colorare".
 - Ogni tanto salva una **copia di sicurezza** dall'area Adulti: se cancelli i dati di Chrome, disegni e foto spariscono.
 - Se un disegno ha troppe o troppo poche linee: *Altre regolazioni* > Poche / Normali / Tante.
 
